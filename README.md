@@ -5,443 +5,600 @@ Authors:
 - Francisco Gonçalves
 - Gonçalo
 
-MuJoCo Humanoid Action Imitation
+MuJoCo Golf Swing Imitation
 
-A Python project for simulating a humanoid in MuJoCo and making the model imitate a target action or motion.
+A Python project using MuJoCo to simulate a humanoid golf player and reproduce a target golf swing while holding a golf club.
 
-The project uses a Python virtual environment to keep dependencies isolated from the system Python installation.
+The project focuses on motion imitation and physics simulation. A target golf swing is converted into target humanoid joint movements, and a controller drives the MuJoCo humanoid to reproduce the motion.
+
+The project uses uv for Python environment and dependency management.
+
+Project Overview
+
+The simulation consists of:
+
+A humanoid golf player
+
+A golf club attached to the player's hands
+
+Target golf-swing motion data
+
+Motion retargeting
+
+A controller for following the target motion
+
+MuJoCo for physics simulation and visualization
+
+The general pipeline is:
+
+Target Golf Swing
+       │
+       ▼
+ Motion Retargeting
+       │
+       ▼
+Target Joint Positions
+       │
+       ▼
+ Motion Controller
+       │
+       ▼
+     MuJoCo
+       │
+       ▼
+Humanoid + Golf Club
+       │
+       ▼
+   Golf Swing
+
+
+This project does not require reinforcement learning. The humanoid directly follows a predefined target motion.
 
 Requirements
 
-Python 3.10 or newer
+Python 3.10+
 
-MuJoCo 3.x
+uv
 
-Git (optional, but recommended)
+Git (optional)
 
-The project does not require reinforcement learning libraries such as Stable-Baselines3 if the goal is direct action/motion imitation.
+MuJoCo is installed as a Python dependency and does not need to be installed separately for the normal Python workflow.
 
 Project Structure
 
-A typical project structure is:
+A recommended project structure is:
 
-project/
+golf-swing-mujoco/
+│
 ├── models/
-│   └── humanoid.xml
+│   ├── humanoid.xml
+│   ├── golf_club.xml
+│   └── ...
+│
+├── data/
+│   └── target_swing/
+│       └── swing.csv
+│
 ├── src/
-│   └── main.py
-├── requirements.txt
+│   ├── main.py
+│   ├── controller.py
+│   ├── motion.py
+│   └── ...
+│
+├── pyproject.toml
+├── uv.lock
 ├── README.md
 └── .gitignore
 
 
-Adjust the paths above if your project uses a different structure.
+The exact structure can be changed depending on the implementation.
 
+Installing uv
 Linux
-1. Install Python
 
-Check whether Python is already installed:
+The recommended installation method is:
 
-python3 --version
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 
-Python 3.10+ is recommended.
+Restart your terminal or reload your shell configuration.
 
-On Ubuntu/Debian, if Python is not installed:
+Verify the installation:
 
-sudo apt update
-sudo apt install python3 python3-pip python3-venv
+uv --version
 
+
+If uv is not found, make sure the directory containing the uv executable is in your PATH.
+
+Windows
+
+Open PowerShell and run:
+
+irm https://astral.sh/uv/install.ps1 | iex
+
+
+Restart PowerShell after installation.
 
 Verify:
 
-python3 --version
-pip3 --version
+uv --version
 
-2. Create the Virtual Environment
+Getting the Project
+
+If the project is hosted on Git:
+
+git clone <REPOSITORY_URL>
+cd <PROJECT_DIRECTORY>
+
+
+If you already have the project, simply navigate to its directory:
+
+Linux
+cd <PROJECT_DIRECTORY>
+
+Windows
+cd <PROJECT_DIRECTORY>
+
+Setting Up the Environment
+
+uv automatically manages the project's virtual environment.
+
+You do not need to manually run:
+
+python -m venv .venv
+
+
+and you do not need to manually activate the environment for normal uv run commands.
+
+Linux
 
 From the project directory:
 
-python3 -m venv .venv
+uv sync
+
+Windows
+
+From the project directory:
+
+uv sync
 
 
-This creates a virtual environment in:
+The command:
 
-.venv/
+uv sync
 
-3. Activate the Environment
+
+will:
+
+Create .venv/ if it does not exist.
+
+Install the Python version required by the project.
+
+Install the dependencies from pyproject.toml.
+
+Use uv.lock to reproduce the locked dependency versions.
+
+Running the Program
+
+The recommended way to run the project is with uv run.
+
+Linux
+uv run python src/main.py
+
+Windows
+uv run python src\main.py
+
+
+You do not need to manually activate .venv when using uv run.
+
+uv automatically runs the command inside the project's managed environment.
+
+Activating the Virtual Environment
+
+You can activate .venv manually if you want to work interactively inside the environment.
+
+Linux
 source .venv/bin/activate
 
 
-After activation, your terminal should show something similar to:
+You should see something similar to:
 
-(.venv) user@computer:~/project$
-
-
-You can verify that Python is using the virtual environment:
-
-which python
+(.venv) user@computer:~/golf-swing-mujoco$
 
 
-It should point to:
-
-.../project/.venv/bin/python
-
-4. Install the Libraries
-
-With the virtual environment activated:
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-5. Update the Libraries
-
-To update the packages specified by requirements.txt:
-
-python -m pip install --upgrade -r requirements.txt
-
-
-If you modify requirements.txt, simply run:
-
-python -m pip install -r requirements.txt
-
-6. Run the Program
-
-With the environment activated:
+Then you can run:
 
 python src/main.py
 
-
-If your main file is located somewhere else, replace the path accordingly.
-
-For example:
-
-python main.py
-
-7. Deactivate the Environment
 
 When finished:
 
 deactivate
 
-Windows
-1. Install Python
-
-Download and install Python from the official Python website.
-
-During installation, make sure to enable:
-
-Add Python to PATH
-
-
-Check the installation using PowerShell or Command Prompt:
-
-python --version
-
-
-and:
-
-pip --version
-
-
-Python 3.10+ is recommended.
-
-2. Create the Virtual Environment
-
-Open PowerShell or Command Prompt and navigate to the project directory:
-
-cd path\to\project
-
-
-Create the virtual environment:
-
-python -m venv .venv
-
-
-This creates:
-
-.venv\
-
-
-inside the project.
-
-3. Activate the Environment
-PowerShell
+Windows PowerShell
 .\.venv\Scripts\Activate.ps1
-
-
-After activation, you should see something similar to:
-
-(.venv) PS C:\project>
-
-
-If PowerShell prevents the activation script from running, you may need to allow local scripts for your user account:
-
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-
-Then activate again:
-
-.\.venv\Scripts\Activate.ps1
-
-Command Prompt
-
-If you are using cmd.exe:
-
-.venv\Scripts\activate.bat
 
 
 You should see:
 
-(.venv) C:\project>
-
-4. Install the Libraries
-
-With the virtual environment activated:
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-5. Update the Libraries
-
-To update the packages specified in requirements.txt:
-
-python -m pip install --upgrade -r requirements.txt
+(.venv) PS C:\golf-swing-mujoco>
 
 
-If you modify requirements.txt, run:
-
-python -m pip install -r requirements.txt
-
-6. Run the Program
-
-With the environment activated:
+Then:
 
 python src\main.py
 
-
-If the main file is in the project root:
-
-python main.py
-
-7. Deactivate the Environment
 
 When finished:
 
 deactivate
 
-Requirements
+Recommended approach
 
-The project uses the following Python libraries:
+For most development, you can simply use:
 
-mujoco
-numpy
-scipy
-matplotlib
-imageio
-PyYAML
-tqdm
+uv run python src/main.py
 
 
-The complete list and compatible versions are defined in:
+instead of manually activating the environment.
 
-requirements.txt
+Installing Dependencies
 
+Project dependencies should be defined in pyproject.toml.
 
-A typical requirements.txt is:
+For example:
 
-mujoco>=3.3,<4
-numpy>=1.26,<3
-scipy>=1.13,<2
-matplotlib>=3.9,<4
-imageio>=2.34,<3
-PyYAML>=6.0,<7
-tqdm>=4.66,<5
-
-First-Time Setup
-Linux
-git clone <REPOSITORY_URL>
-cd <PROJECT_DIRECTORY>
-
-python3 -m venv .venv
-source .venv/bin/activate
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python src/main.py
-
-Windows
-git clone <REPOSITORY_URL>
-cd <PROJECT_DIRECTORY>
-
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python src\main.py
+[project]
+name = "golf-swing-mujoco"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "mujoco>=3.3,<4",
+    "numpy>=1.26,<3",
+    "scipy>=1.13,<2",
+    "matplotlib>=3.9,<4",
+    "imageio>=2.34,<3",
+    "pyyaml>=6.0,<7",
+    "tqdm>=4.66,<5",
+]
 
 
-Replace <REPOSITORY_URL> and <PROJECT_DIRECTORY> with the appropriate values.
+After changing pyproject.toml, run:
 
-Subsequent Runs
-
-You do not need to recreate the virtual environment every time.
-
-Linux
-cd <PROJECT_DIRECTORY>
-source .venv/bin/activate
-python src/main.py
-
-Windows PowerShell
-cd <PROJECT_DIRECTORY>
-.\.venv\Scripts\Activate.ps1
-python src\main.py
-
-Updating the Project
-
-If the project has been updated and requirements.txt has changed, activate the environment and run:
-
-Linux
-source .venv/bin/activate
-python -m pip install --upgrade -r requirements.txt
-
-Windows
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade -r requirements.txt
-
-Testing the MuJoCo Installation
-
-After installing the dependencies, you can check that MuJoCo is available:
-
-python -c "import mujoco; print(mujoco.__version__)"
+uv sync
 
 
-The command is the same on Linux and Windows.
+This updates the environment and uv.lock.
 
-You should see the installed MuJoCo version, for example:
+Adding a New Dependency
 
-3.x.x
+Instead of manually editing pyproject.toml, you can use uv.
 
+For example, to add pandas:
 
-You can also test the other main dependencies:
-
-python -c "import numpy, scipy, matplotlib; print('Dependencies OK')"
-
-Action Imitation
-
-The purpose of this project is to make the MuJoCo humanoid reproduce a target action or motion.
-
-A typical control pipeline is:
-
-Target Action / Motion
-        │
-        ▼
-Target Joint Positions
-        │
-        ▼
-   Controller
-        │
-        ▼
-     MuJoCo
-        │
-        ▼
-     Humanoid
+uv add pandas
 
 
-The project can use a controller such as a PD controller to make the humanoid follow target joint positions.
+This will:
 
-Conceptually:
+Add the dependency to pyproject.toml
+
+Resolve compatible versions
+
+Update uv.lock
+
+Install the package
+
+For a development dependency:
+
+uv add --dev pytest
+
+Updating Dependencies
+
+To update dependencies according to the project's dependency requirements:
+
+uv lock --upgrade
+
+
+Then synchronize the environment:
+
+uv sync
+
+
+Alternatively:
+
+uv sync --upgrade
+
+
+Use this when you want uv to update the project's dependencies and synchronize the environment.
+
+Removing a Dependency
+
+For example:
+
+uv remove matplotlib
+
+
+uv will remove the dependency from the project and update the lock file.
+
+Checking the Environment
+
+You can check the Python version used by the project:
+
+uv run python --version
+
+
+Check the installed MuJoCo version:
+
+uv run python -c "import mujoco; print('MuJoCo:', mujoco.__version__)"
+
+
+Check the main dependencies:
+
+uv run python -c "import numpy, scipy, matplotlib; print('Dependencies OK')"
+
+Python Version
+
+The Python version can be specified in pyproject.toml.
+
+For example:
+
+[project]
+requires-python = ">=3.10"
+
+
+If the project requires a specific Python version, uv can manage it for you.
+
+For example:
+
+uv python install 3.12
+
+
+Then create/use the environment with:
+
+uv venv --python 3.12
+
+
+Normally, however, uv sync is sufficient when the project configuration already specifies the required Python version.
+
+Target Golf Swing
+
+The target swing can be represented as a time sequence of humanoid joint positions.
+
+For example:
+
+Time        Joint 1    Joint 2    Joint 3    ...
+------------------------------------------------
+0.00 s      ...        ...        ...        ...
+0.01 s      ...        ...        ...        ...
+0.02 s      ...        ...        ...        ...
+...
+
+
+The target motion can be stored in:
+
+CSV
+
+JSON
+
+NumPy arrays
+
+Motion-capture formats
+
+For example:
+
+data/
+└── target_swing/
+    └── swing.csv
+
+
+The motion-processing code converts the target motion into joint targets that can be used by the MuJoCo controller.
+
+Golf Swing Control
+
+The humanoid follows the target golf swing using a motion controller.
+
+A simplified control loop is:
+
+Target Pose
+     │
+     ▼
+Current Humanoid Pose
+     │
+     ▼
+Calculate Error
+     │
+     ▼
+Controller
+     │
+     ▼
+Joint Torques
+     │
+     ▼
+MuJoCo
+
+
+A PD controller can, for example, calculate torque as:
 
 torque =
     Kp * (target_position - current_position)
     - Kd * current_velocity
 
 
-The exact implementation depends on how the target action is represented.
+where:
 
-Troubleshooting
-python is not recognized on Windows
+Kp controls how strongly the humanoid follows the target position.
 
-Try:
+Kd provides damping.
 
-py --version
+target_position is the desired joint position.
 
+current_position is the current joint position.
 
-If the Python launcher is available, create the environment with:
+current_velocity is the current joint velocity.
 
-py -m venv .venv
+The controller ultimately produces the forces/torques required to reproduce the golf swing.
 
+Golf Club
 
-Then activate it:
+The golf club is part of the MuJoCo model and should be connected to the humanoid's hands.
 
-.\.venv\Scripts\Activate.ps1
+A typical model hierarchy is:
 
-pip is not recognized
-
-Use Python to invoke pip instead:
-
-python -m pip install -r requirements.txt
-
-
-This is generally preferable to calling pip directly.
-
-Virtual environment is not activated
-
-Check the Python executable:
-
-Linux
-which python
-
-Windows
-where.exe python
+Humanoid
+   │
+   ├── Left Arm
+   │      └── Left Hand
+   │
+   └── Right Arm
+          └── Right Hand
+                 │
+                 ▼
+             Golf Club
+                 │
+                 ▼
+             Club Head
 
 
-The result should point to the project's .venv directory.
+The golf club's position, orientation, and velocity are important when evaluating the resulting swing.
 
-MuJoCo import error
+Simulation Loop
 
-Make sure the virtual environment is activated and reinstall the dependencies:
+The main simulation follows this general process:
 
-python -m pip install --upgrade -r requirements.txt
+1. Load MuJoCo model
+2. Load target golf swing
+3. Initialize humanoid
+4. Read current humanoid state
+5. Determine target pose
+6. Calculate control input
+7. Apply joint torques
+8. Advance MuJoCo simulation
+9. Render humanoid and golf club
+10. Repeat until the swing is complete
+
+Running Tests
+
+If tests are included in the project, run them with:
+
+uv run pytest
 
 
-Then test:
+If pytest has not yet been added:
 
-python -c "import mujoco; print(mujoco.__version__)"
+uv add --dev pytest
 
-Starting From a Clean Environment
+Formatting and Linting
 
-If the virtual environment becomes corrupted or you want to start over, delete .venv and recreate it.
+If the project uses Ruff, install it as a development dependency:
+
+uv add --dev ruff
+
+
+Run the linter:
+
+uv run ruff check .
+
+
+Format the project:
+
+uv run ruff format .
+
+Git and uv
+
+The following files should normally be committed:
+
+pyproject.toml
+uv.lock
+README.md
+.gitignore
+src/
+models/
+data/
+
+
+The .venv/ directory should not be committed.
+
+uv.lock should normally be committed because it ensures that other developers can reproduce the same dependency versions.
+
+Updating the Project From Git
+
+After pulling changes from the repository:
+
+git pull
+uv sync
+
+
+Then run:
+
+uv run python src/main.py
+
+
+If pyproject.toml or uv.lock changed, uv sync will update the local environment accordingly.
+
+Clean Environment
+
+If the virtual environment becomes corrupted, you can remove it and recreate it.
 
 Linux
 rm -rf .venv
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+uv sync
 
 Windows PowerShell
 Remove-Item -Recurse -Force .venv
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+uv sync
 
-Notes
 
-Always activate .venv before running the project.
+Then run the project normally:
 
-Do not commit .venv to Git.
+Linux
+uv run python src/main.py
 
-Keep the project's dependencies in requirements.txt.
+Windows
+uv run python src\main.py
 
-MuJoCo provides the physics simulation; it does not require reinforcement learning for direct motion/action imitation.
+Quick Start
 
-If the project later uses reinforcement learning, additional packages such as PyTorch and Stable-Baselines3 can be added to requirements.txt.
+For someone who has already installed uv:
+
+Linux
+git clone <REPOSITORY_URL>
+cd <PROJECT_DIRECTORY>
+
+uv sync
+uv run python src/main.py
+
+Windows
+git clone <REPOSITORY_URL>
+cd <PROJECT_DIRECTORY>
+
+uv sync
+uv run python src\main.py
+
+
+That's all that is required for the normal setup.
+
+Reinforcement Learning
+
+Reinforcement learning is not required for the current implementation.
+
+The current objective is to imitate a predefined golf swing:
+
+Target Swing
+      ↓
+Motion Retargeting
+      ↓
+Target Joint Positions
+      ↓
+Motion Controller
+      ↓
+MuJoCo
+      ↓
+Humanoid + Golf Club
+
+
+Reinforcement learning can be introduced later if the project is extended to learn the swing automatically rather than directly following target motion.
 
 License
 
-Add the project's license information here.s
+Add the project's license information here.
