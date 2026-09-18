@@ -1,7 +1,4 @@
-# =========================
 # Python
-# =========================
-
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,92 +7,44 @@ __pycache__/
 .venv/
 venv/
 env/
-ENV/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-
-# =========================
-# IDEs / Editors
-# =========================
-
+# IDEs
 .vscode/
 .idea/
 
-# VS Code local settings
-*.code-workspace
-
-# =========================
 # Jupyter
-# =========================
-
 .ipynb_checkpoints/
 
-# =========================
-# Testing / Coverage
-# =========================
-
+# Testing / cache
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
-.coverage.*
 htmlcov/
 
-# =========================
-# Type checking / linters
-# =========================
-
-.mypy_cache/
-.pyright/
-.ruff_cache/
-
-# =========================
 # OS files
-# =========================
-
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# =========================
 # Logs
-# =========================
-
 *.log
 logs/
-
-# =========================
-# MuJoCo / Simulation output
-# =========================
-
-# Rendered videos
-*.mp4
-*.avi
-*.mov
-*.mkv
-
-# Rendered images / screenshots
-*.png
-*.jpg
-*.jpeg
 
 # Simulation output
 output/
 outputs/
 results/
-
-# Temporary simulation files
-tmp/
-temp/
-
-# =========================
-# Experiment data
-# =========================
-
-# Generated experiment data
-experiments/
 runs/
+
+# Generated media
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.png
+*.jpg
+*.jpeg
 
 # Model checkpoints
 checkpoints/
@@ -103,10 +52,7 @@ checkpoints/
 *.pth
 *.pt
 
-# =========================
-# Environment / secrets
-# =========================
-
+# Environment variables / secrets
 .env
 .env.*
 !.env.example
