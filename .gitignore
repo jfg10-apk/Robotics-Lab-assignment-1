@@ -1,0 +1,112 @@
+# =========================
+# Python
+# =========================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# =========================
+# IDEs / Editors
+# =========================
+
+.vscode/
+.idea/
+
+# VS Code local settings
+*.code-workspace
+
+# =========================
+# Jupyter
+# =========================
+
+.ipynb_checkpoints/
+
+# =========================
+# Testing / Coverage
+# =========================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# =========================
+# Type checking / linters
+# =========================
+
+.mypy_cache/
+.pyright/
+.ruff_cache/
+
+# =========================
+# OS files
+# =========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Logs
+# =========================
+
+*.log
+logs/
+
+# =========================
+# MuJoCo / Simulation output
+# =========================
+
+# Rendered videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Rendered images / screenshots
+*.png
+*.jpg
+*.jpeg
+
+# Simulation output
+output/
+outputs/
+results/
+
+# Temporary simulation files
+tmp/
+temp/
+
+# =========================
+# Experiment data
+# =========================
+
+# Generated experiment data
+experiments/
+runs/
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+
+# =========================
+# Environment / secrets
+# =========================
+
+.env
+.env.*
+!.env.example
