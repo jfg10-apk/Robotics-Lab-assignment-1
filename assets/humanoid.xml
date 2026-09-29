@@ -1,0 +1,34 @@
+<mujoco>
+  <worldbody>
+    <!-- Fixed Torso (No joint connecting it to the world, so it hangs in the air) -->
+    <body name="torso" pos="0 0 1.2">
+      <geom type="cylinder" size="0.1 0.3" rgba="0.8 0.2 0.2 1" mass="10"/>
+
+      <!-- Right Arm (Swinging arm) -->
+      <body name="right_upper_arm" pos="0 -0.15 0.2">
+        <joint name="shoulder_r" type="hinge" axis="0 1 0"/>
+        <geom type="capsule" size="0.04" fromto="0 0 0 0 0 -0.3" rgba="0.8 0.8 0.2 1" mass="1"/>
+        
+        <body name="right_lower_arm" pos="0 0 -0.3">
+          <joint name="elbow_r" type="hinge" axis="0 1 0"/>
+          <geom type="capsule" size="0.03" fromto="0 0 0 0 0 -0.3" rgba="0.8 0.8 0.2 1" mass="1"/>
+          
+          <!-- The Anchor Point: Where the club will attach -->
+          <site name="grip_site" pos="0 0 -0.3" size="0.02" rgba="1 0 0 1"/>
+        </body>
+      </body>
+
+      <!-- Left Arm (Static, for counterbalance/visuals) -->
+      <body name="left_upper_arm" pos="0 0.15 0.2">
+        <joint name="shoulder_l" type="hinge" axis="0 1 0"/>
+        <geom type="capsule" size="0.04" fromto="0 0 0 0 0 -0.3" rgba="0.8 0.8 0.2 1" mass="1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position joint="shoulder_r" name="ctrl_shoulder_r" kp="300"/>
+    <position joint="elbow_r" name="ctrl_elbow_r" kp="300"/>
+    <position joint="shoulder_l" name="ctrl_shoulder_l" kp="300"/>
+  </actuator>
+</mujoco>

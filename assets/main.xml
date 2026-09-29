@@ -1,0 +1,14 @@
+<mujoco>
+  <!-- Global compiler and option settings -->
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <!-- Load the environment -->
+  <include file="scene.xml"/>
+  <include file="humanoid.xml"/>
+  <include file="club_and_ball.xml"/>
+
+  <equality>
+    <weld site1="grip_site" site2="club_handle_site"/>
+  </equality>
+</mujoco>
