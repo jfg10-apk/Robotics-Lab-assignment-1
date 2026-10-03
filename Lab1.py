@@ -8,16 +8,13 @@ model = mujoco.MjModel.from_xml_path("human.xml")
 data = mujoco.MjData(model)
 
 
+# ============================================================
+# ATUADORES QUE VAMOS CONTROLAR
+# ============================================================
 
-Kp = 150.0  
-Kd = 10.0   
-
-
-##########################################################################################################
-############################### ESTA PARTE É OQ IMPORTA RAPAZAIADA ACHO EU #################################
-##########################################################################################################
-# Escolher os atuadores/motores que queremos controlar para o swing
 swing_actuators = [
+    "abdomen_x",       # [0] Rotação da cintura
+    "abdomen_y",       # [0] Rotação da cintura
     "abdomen_z",       # [0] Rotação da cintura 
     "shoulder1_right", # [1] Rotação do ombro direito (frente/trás)
     "shoulder2_right", # [2] Elevação do ombro direito (cima/baixo)
@@ -30,18 +27,27 @@ swing_actuators = [
 ]
 
 # Trajetória (Keyframes)
-# Formato: (Tempo_em_segundos, [lista_de_9_angulos_em_radianos])
+# Formato: (Tempo_em_segundos, [lista_de_11_angulos_em_graus])
 trajectory = [
-    #        [ abd,   sh1_R, sh2_R, elb_R, pul_R, sh1_L, sh2_L, elb_L, pul_L ]
-    (0.0, [ 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0  ]), # Postura inicial
-    (1.5, [-0.8,   0.5,   0.0,  -1.0,  -0.5,  -0.5,   0.0,  -0.2,   0.0  ]), # Top of Backswing
-    (2.0, [ 0.2,  -0.2,   0.0,  -0.2,   0.0,   0.2,   0.0,   0.0,   0.0  ]), # Impact 
-    (3.0, [ 1.0,  -1.0,   0.0,  -0.5,   0.5,   1.0,   0.0,  -1.2,   0.5  ])  # Follow-through 
+    #        [ abd_x, abd_y, abd_z, sh1_R, sh2_R, elb_R, pul_R, sh1_L, sh2_L, elb_L, pul_L ]
+    (0.0, np.deg2rad([ 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0  ])), # Postura inicial
+    (2.0, np.deg2rad([ 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0  ])), # Top of Backswing
+    (5.0, np.deg2rad([ -20,    20,    25,   -40,   -20,   -30,    10,   -20,    20,   -20,   -10  ])), # Impact 
+    (8.0, np.deg2rad([  40,   -40,   -30,    40,    -8,   -30,    10,    29,     7,     8,     2  ])), # Follow Through
 ]
+
 
 #####################################################################################################################################
 #############################Maybe pensar nos ângulos? Tenho de mudar para radianos com o 'pi' ainda n fiz################################################
 #####################################################################################################################################
+
+
+# Obter os IDs dos atuadores
+actuator_ids = [
+    model.actuator(name).id
+    for name in swing_actuators
+]
+
 
 def get_target_angles(t):
     """Função para interpolar os ângulos entre os keyframes"""
@@ -57,6 +63,10 @@ def get_target_angles(t):
     return np.array(trajectory[-1][1])
 
 
+# ============================================================
+# SIMULAÇÃO
+# ============================================================
+
 with mujoco.viewer.launch_passive(model, data) as viewer:
     
     while viewer.is_running():
@@ -68,27 +78,9 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         # Obter os ângulos desejados para o instante 't'
         targets = get_target_angles(t)
         
-        # Loop do Controlador PD
-        for idx, act_name in enumerate(swing_actuators):
-            # Obter o ID do atuador através do nome
-            act_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, act_name)
-            
-            # Encontrar a junta (joint) correspondente a este motor
-            joint_id = model.actuator_trnid[act_id, 0]
-            qpos_idx = model.jnt_qposadr[joint_id] # Índice da posição
-            qvel_idx = model.jnt_dofadr[joint_id]  # Índice da velocidade
-            
-            # Ler a posição (ângulo) e velocidade atuais da junta
-            current_pos = data.qpos[qpos_idx]
-            current_vel = data.qvel[qvel_idx]
-            
-            # Matemática do PID (só P e D)
-            error = targets[idx] - current_pos
-            torque = (Kp * error) - (Kd * current_vel)
-            
-            
-            # Como a força máxima ('gear') também afeta isto, vamos aplicar o torque
-            data.ctrl[act_id] = torque
+        for i, actuator_id in enumerate(actuator_ids):
+       
+            data.ctrl[actuator_id] = targets[i]
             
         # Avançar a física um passo (0.005 segundos)
         mujoco.mj_step(model, data)
@@ -102,5 +94,5 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
             time.sleep(time_until_next_step)
         
         # Fazer 'reset' à simulação a cada 4 segundos para repetir o movimento eternamente
-        if t > 4.0:
+        if t > 10.0:
             mujoco.mj_resetData(model, data)

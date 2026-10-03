@@ -1,0 +1,15 @@
+human.xml
+-adicionei dois "site", dois pontos fixos, uma da mao direita e outra do traco,
+para depois a mao poder segurar no taco sem largar 
+-o joint do pulso das duas maos é no eixo y (sentido de as duas maos segurarem o
+taco e apontarem para frenbte ou para tras, nao sei se vou perceber)
+- mudei os actuador do tipo motor para position, pois pelo que percebi, o tipo position
+consegue calcular as posicoes diretamente pelo proprio mujoco, sem nos precisarmos de 
+os calcular usando python
+
+Lab1.py
+-adicionei mais dois joints do tronco: "abdomen_x" e "abdomen_y"
+-a parte onde faz os calculos foi mudificado: 
+agora o .py so manda ordens para que posicoes é que o boneco tem que estar 
+(temos de mudar as posicoes ainda (os angulos de cada joint, agora estao em graus))
+
