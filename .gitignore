@@ -21,6 +21,10 @@ env/
 .ruff_cache/
 .coverage
 htmlcov/
+old_files/
+notes/
+Double-pendulum/
+# (Old project to test the double pendulum physics)
 
 # OS files
 .DS_Store

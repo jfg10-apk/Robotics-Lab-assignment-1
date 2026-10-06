@@ -1,14 +1,21 @@
 <mujoco>
+  <!-- Global simulation options shared by the whole model. -->
+  <option timestep="0.005" integrator="implicitfast"/>
+
+  <visual>
+    <map force="0.1" zfar="30"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global offwidth="2560" offheight="1440" elevation="-20" azimuth="120"/>
+  </visual>
+
+  <statistic center="0 0 0.7"/>
+
+  <!-- Textures and materials used by the humanoid body and the floor. -->
   <asset>
-    <!-- Adds a nice sky gradient instead of a black background -->
-    <texture type="skybox" builtin="gradient" rgb1="0.4 0.6 0.8" rgb2="0 0 0" width="512" height="512"/>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512"/>
+    <texture name="body" type="cube" builtin="flat" mark="cross" width="128" height="128" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" markrgb="1 1 1"/>
+    <material name="body" texture="body" texuniform="true" rgba="0.8 0.6 .4 1"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
   </asset>
-  
-  <worldbody>
-    <!-- Directional sunlight -->
-    <light pos="0 0 10" diffuse="1 1 1" dir="0 0 -1" directional="true"/>
-    
-    <!-- The golf green -->
-    <geom type="plane" size="5 5 0.1" rgba="0.2 0.5 0.2 1" name="floor"/>
-  </worldbody>
 </mujoco>
