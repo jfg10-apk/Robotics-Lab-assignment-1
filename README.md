@@ -40,22 +40,85 @@ This project implements a MuJoCo humanoid simulation with a modular structure to
 - The controller maps fixed path poses in `src/trajectory.py` to actuator targets.
 - `main.py` acts as the entry point and keeps the execution flow readable.
 
-## Run the project
+## Setup and run
 
-Run from the project root:
+Run the following commands from the project root (the directory containing
+`requirements.txt`). Use Python 3.11 or newer.
+
+### 1. Create a virtual environment
+
+Linux/macOS:
+
+```bash
+python3 -m venv .venv
+```
+
+Windows PowerShell or Command Prompt:
+
+```powershell
+py -m venv .venv
+```
+
+The `.venv` directory is ignored by Git and contains this project's isolated
+Python environment.
+
+### 2. Activate the environment
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Windows Command Prompt:
+
+```bat
+.venv\Scripts\activate.bat
+```
+
+When activation succeeds, the environment name (usually `.venv`) appears in
+your terminal prompt. Activate it again whenever you open a new terminal for
+this project.
+
+### 3. Install the dependencies
+
+With `.venv` activated, install the packages listed in `requirements.txt`:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 4. Run the simulation
+
+Still from the project root, start the default physics simulation:
 
 ```bash
 python src/main.py
 ```
 
-The simulation can run in either of two modes:
+To run without physics stepping, with the selected joint positions set directly:
 
 ```bash
-# Run the standard trajectory by directly setting joint positions (no physics stepping).
 python src/main.py --mode kinematics
+```
 
-# Run the standard trajectory with MuJoCo physics and position actuators.
+To explicitly select physics mode:
+
+```bash
 python src/main.py --mode physics
+```
+
+Close the virtual environment when you are finished:
+
+```bash
+deactivate
 ```
 
 Physics mode uses the simulation clock, position actuators, and MuJoCo physics
