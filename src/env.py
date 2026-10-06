@@ -1,3 +1,4 @@
+from math import pi
 from pathlib import Path
 
 import mujoco
@@ -15,6 +16,7 @@ class HumanoidEnv:
         )
         self.model = mujoco.MjModel.from_xml_path(str(model_path))
         self.data = mujoco.MjData(self.model)
+        self._target_data = mujoco.MjData(self.model)
         mujoco.mj_forward(self.model, self.data)
         # Locked physics joints are restored to this initial pose each step.
         self.initial_qpos = self.data.qpos.copy()
@@ -35,16 +37,15 @@ class HumanoidEnv:
             2.0 * self.model.geom_size[self.model.geom(name).id, 1]
             for name in ("upper_arm_right", "lower_arm_right")
         )
-        shoulder_id = self.model.joint("shoulder1_right").id
-        shoulder_qpos_address = int(self.model.jnt_qposadr[shoulder_id])
-        self.shoulder_initial_angle = float(
-            self.data.qpos[shoulder_qpos_address]
-        )
-        # Cache the hinge frame and tip at the starting pose for the circular reference.
-        self.shoulder_pivot = self.data.xanchor[shoulder_id].copy()
-        self.shoulder_axis = self.data.xaxis[shoulder_id].copy()
-        tip_id = self.model.site("ponta_taco").id
-        self.initial_club_tip = self.data.site_xpos[tip_id].copy()
+        # MuJoCo hinge positions are radians; phase equations can use the same units.
+        elbow_id = self.model.joint("elbow_right").id
+        elbow_qpos_address = int(self.model.jnt_qposadr[elbow_id])
+        self.elbow_initial_angle = float(self.data.qpos[elbow_qpos_address])
+
+        # These are trajectory speeds (rad/s), not actuator position targets.
+        self.omega1 = pi / 2
+        self.omega2 = pi / 2
+
         self.target_marker_mocap_id = int(
             self.model.body("target_marker").mocapid[0]
         )
@@ -52,6 +53,27 @@ class HumanoidEnv:
     def set_target_marker(self, position):
         """Place the visual target marker at a world-space point."""
         self.data.mocap_pos[self.target_marker_mocap_id] = position
+
+    def get_target_site_position(self, action, site_name="ponta_taco"):
+        """Compute a site's target position for joint targets without altering live state."""
+        # Use scratch data so the live simulation state remains untouched.
+        self._target_data.qpos[:] = self.data.qpos
+        for actuator_id, target in action.items():
+            if not 0 <= actuator_id < self.model.nu:
+                raise ValueError(f"Invalid actuator ID: {actuator_id}")
+
+            joint_id = self.actuator_joint_ids[actuator_id]
+            joint_type = int(self.model.jnt_type[joint_id])
+            if joint_type not in (mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE):
+                raise ValueError(
+                    f"Target-pose calculation requires hinge or slide joints; "
+                    f"actuator {self.model.actuator(actuator_id).name!r} is "
+                    f"attached to {self.model.joint(joint_id).name!r}."
+                )
+            self._target_data.qpos[self.model.jnt_qposadr[joint_id]] = target
+
+        mujoco.mj_forward(self.model, self._target_data)
+        return self._target_data.site(site_name).xpos.copy()
 
     def step(self, locked_joint_names=()):
         """Step physics, restoring locked joint poses on both sides of the step."""

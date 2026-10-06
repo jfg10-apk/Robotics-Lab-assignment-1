@@ -60,4 +60,44 @@ def plane_rotation_deg(x_loc, y_loc, z_loc, p, q, r):
     rp = rot.apply(np.array([x_loc, y_loc, z_loc]))
 
     return float(rp[0]), float(rp[1]), float(rp[2])
+
+
+
+
+def dir_kinematics_path1_pA(env, th1, th2):
+    """
+        Path 1 part A
+        Return endpoint of the elbow (x1, z1) only. The rotation starts in the z negative semi-axis.
+        
+        Notes:
+            The part A have theta 2 static.
+            No other limbs need to change in this path.
+
+        env: environment and humanoid body variables
+        th1: theta 1
+    """
+
+    l1 = env.link_lengths[0] # Extracts link one only
+    x1 = -l1 * np.sin(th1)
+    z1 = -l1 * np.cos(th1)
     
+    return float(x1), float(z1)
+
+
+def dir_kinematics_path1_pB(env, th1, th2):
+    """
+        Path 1 part B - No ankle movement
+        Return endpoint of the elbow (x1, z1). The rotation starts in the z negative semi-axis. No ankle movement.
+        
+        Notes:
+            The part B have theta 1 and 2 moving.
+            No other limbs need to change in this path.
+
+        env: environment and humanoid body variables
+        th1: theta 1
+    """
+
+    l1 = env.link_lengths[0] # Extracts link one only
+    x1 = -l1 * np.sin(th1)
+    z1 = -l1 * np.cos(th1)
+    return float(x1), float(z1)

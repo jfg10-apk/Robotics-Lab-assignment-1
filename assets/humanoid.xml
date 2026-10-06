@@ -1,6 +1,7 @@
 <mujoco>
   <!-- Shared default properties for all limbs and joints. -->
   <default>
+    <!-- kv is actuator velocity feedback, not a trajectory angular-speed command. -->
     <position kp="150"
               kv="10"
               inheritrange="1"/>
@@ -61,10 +62,10 @@
         </default>
       </default>
       <default class="shoulder">
-        <joint range="-85 60"/>
+        <joint range="-90 90"/>
       </default>
       <default class="elbow">
-        <joint range="-100 50" stiffness="0"/>
+        <joint range="0 180" stiffness="0"/>
       </default>
     </default>
   </default>

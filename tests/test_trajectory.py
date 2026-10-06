@@ -11,10 +11,18 @@ from controllers import SwingController
 from env import HumanoidEnv
 from main import _make_key_callback
 from trajectory import (
-    JOINT_TRAJECTORIES,
+    ELBOW_JOINT,
     SHOULDER_JOINT,
-    TRAJECTORY_DURATION,
-    get_target_angle,
+    THETA1_A_END,
+    THETA1_A_START,
+    THETA1_B_END,
+    THETA1_C_END,
+    THETA2_A,
+    THETA2_C,
+    get_path1_angles,
+    get_t1_pA_angles,
+    get_t1_pB_angles,
+    get_t1_pC_angles,
 )
 
 
@@ -31,22 +39,19 @@ def test_viewer_backspace_requests_simulation_reset():
     assert reset_requested.is_set()
 
 
-def test_swing_targets_only_the_right_shoulder():
+def test_controller_commands_shoulder_and_elbow_in_radians():
     env = HumanoidEnv()
     controller = SwingController(env)
 
-    right_swing_ids = {
-        controller.actuator_ids["shoulder1_right"],
-    }
-    times = [0.0, 0.5, 1.0, 1.5, 2.0]
-    actions = [controller.get_action(t) for t in times]
+    action = controller.get_action(0.0)
 
-    assert all(set(action) == right_swing_ids for action in actions)
-    shoulder_id = controller.actuator_ids["shoulder1_right"]
-    shoulder_targets = [action[shoulder_id] for action in actions]
-    assert all(
-        first < second
-        for first, second in zip(shoulder_targets, shoulder_targets[1:])
+    assert set(action) == {
+        controller.actuator_ids[SHOULDER_JOINT],
+        controller.actuator_ids[ELBOW_JOINT],
+    }
+    np.testing.assert_allclose(
+        action[controller.actuator_ids[SHOULDER_JOINT]],
+        np.deg2rad(THETA1_A_START),
     )
 
 
@@ -64,107 +69,85 @@ def test_environment_imports_xml_parameters_for_controller():
     assert env.actuator_ids == expected_actuator_ids
     np.testing.assert_allclose(env.link_lengths, expected_link_lengths)
     assert env.timestep == env.model.opt.timestep
+    np.testing.assert_allclose(env.omega1, np.pi / 2)
+    np.testing.assert_allclose(env.omega2, np.pi / 2)
+
+    for joint_name, expected_range in (
+        (SHOULDER_JOINT, (-90.0, 90.0)),
+        (ELBOW_JOINT, (0.0, 180.0)),
+    ):
+        joint_id = env.model.joint(joint_name).id
+        np.testing.assert_allclose(
+            np.rad2deg(env.model.jnt_range[joint_id]),
+            expected_range,
+        )
 
     controller = SwingController(env)
     assert controller.actuator_ids is env.actuator_ids
-    assert controller.joint_names == ("shoulder1_right",)
+    assert controller.joint_names == (SHOULDER_JOINT, ELBOW_JOINT)
 
 
-def test_swing_trajectory_clamps_and_does_not_repeat():
+def test_path1_phases_define_fixed_poses_and_connect_continuously():
+    assert get_t1_pA_angles(0.0) == (THETA1_A_START, THETA2_A)
+    assert get_t1_pA_angles(1.0) == (THETA1_A_END, THETA2_A)
+    assert get_t1_pB_angles(0.0) == (THETA1_A_END, THETA2_A)
+    assert get_t1_pB_angles(1.0) == (THETA1_B_END, THETA2_C)
+    assert get_t1_pC_angles(0.0) == (THETA1_B_END, THETA2_C)
+    assert get_t1_pC_angles(1.0) == (THETA1_C_END, THETA2_C)
+
+    assert get_path1_angles(0.0) == get_t1_pA_angles(0.0)
+    assert get_path1_angles(1 / 3) == get_t1_pB_angles(0.0)
+    assert get_path1_angles(2 / 3) == get_t1_pC_angles(0.0)
+    assert get_path1_angles(1.0) == get_t1_pC_angles(1.0)
+    assert get_path1_angles(2.0) == get_path1_angles(1.0)
+
+
+def test_path_geometry_is_independent_of_execution_speed():
     env = HumanoidEnv()
     controller = SwingController(env)
-    keyframes = JOINT_TRAJECTORIES[SHOULDER_JOINT]
-    initial_angle = get_target_angle(-1.0, keyframes)
-    final_angle = get_target_angle(TRAJECTORY_DURATION + 1.0, keyframes)
+    original_geometry = [get_t1_pB_angles(progress) for progress in np.linspace(0, 1, 5)]
+    original_duration = controller.phase_durations[1]
 
-    assert initial_angle == get_target_angle(0.0, keyframes)
+    env.omega1 *= 2
+    env.omega2 *= 2
+    faster_controller = SwingController(env)
+
+    assert faster_controller.phase_durations[1] < original_duration
+    assert [get_t1_pB_angles(progress) for progress in np.linspace(0, 1, 5)] == original_geometry
+
+
+def test_controller_traverses_all_three_phases_and_holds_final_pose():
+    controller = SwingController(HumanoidEnv())
+    a_duration, b_duration, _ = controller.phase_durations
+
+    phase_a_boundary = controller.get_action(a_duration)
+    phase_b_boundary = controller.get_action(a_duration + b_duration)
+    final_action = controller.get_action(controller.duration)
+
     np.testing.assert_allclose(
-        final_angle,
-        get_target_angle(TRAJECTORY_DURATION, keyframes),
+        phase_a_boundary[controller.actuator_ids[SHOULDER_JOINT]],
+        np.deg2rad(THETA1_A_END),
     )
-    assert controller.get_action(TRAJECTORY_DURATION + 10.0) == controller.get_action(
-        TRAJECTORY_DURATION
+    np.testing.assert_allclose(
+        phase_b_boundary[controller.actuator_ids[ELBOW_JOINT]],
+        np.deg2rad(THETA2_C),
     )
+    np.testing.assert_allclose(
+        final_action[controller.actuator_ids[SHOULDER_JOINT]],
+        np.deg2rad(THETA1_C_END),
+    )
+    assert controller.get_action(controller.duration + 1.0) == final_action
 
 
-def test_trajectory_interpolates_between_keyframes():
-    start, end = JOINT_TRAJECTORIES[SHOULDER_JOINT]
-    midpoint = (start[0] + end[0]) / 2
-    angle = np.deg2rad((start[1] + end[1]) / 2)
-
-    assert get_target_angle(midpoint, JOINT_TRAJECTORIES[SHOULDER_JOINT]) == angle
-
-
-def test_trajectory_rejects_invalid_keyframe_order_and_nonfinite_time():
-    import pytest
-
-    with pytest.raises(ValueError, match="strictly increasing"):
-        get_target_angle(0.5, ((0.0, -55.0), (0.0, 0.0)))
-
-    with pytest.raises(ValueError, match="finite"):
-        get_target_angle(float("nan"), JOINT_TRAJECTORIES[SHOULDER_JOINT])
-
-
-def test_circular_target_follows_actual_shoulder_axis_and_tip():
+def test_target_site_prediction_matches_kinematic_pose_without_mutating_state():
     env = HumanoidEnv()
     controller = SwingController(env)
-    elbow_joint_id = env.model.joint("elbow_right").id
-    initial_elbow_angle = env.data.qpos[env.model.jnt_qposadr[elbow_joint_id]]
-    radius = np.linalg.norm(env.initial_club_tip - env.shoulder_pivot)
-    initial_target = controller.get_target_point(0.0)
-    final_target = controller.get_target_point(TRAJECTORY_DURATION)
-    assert final_target[2] < initial_target[2]
+    action = controller.get_action(0.0)
+    expected_target = env.get_target_site_position(action)
 
-    for time in np.linspace(0.0, TRAJECTORY_DURATION, 101):
-        action = controller.get_action(time)
-        shoulder = action[controller.actuator_ids["shoulder1_right"]]
-        lower, upper = env.model.actuator_ctrlrange[
-            controller.actuator_ids["shoulder1_right"]
-        ]
-        assert lower <= shoulder <= upper
+    env.apply_kinematic_action(action)
 
-        env.apply_kinematic_action(action)
-        target_point = controller.get_target_point(time)
-        np.testing.assert_allclose(
-            env.data.site("ponta_taco").xpos,
-            target_point,
-            atol=1e-8,
-        )
-        np.testing.assert_allclose(
-            np.linalg.norm(target_point - env.shoulder_pivot),
-            radius,
-            atol=1e-8,
-        )
-        assert (
-            env.data.qpos[env.model.jnt_qposadr[elbow_joint_id]]
-            == initial_elbow_angle
-        )
-        env.set_target_marker(target_point)
-        np.testing.assert_allclose(
-            env.data.mocap_pos[env.target_marker_mocap_id],
-            target_point,
-            atol=1e-8,
-        )
-
-
-def test_club_angle_and_grip_stay_fixed_to_forearm_during_swing():
-    env = HumanoidEnv()
-
-    controller = SwingController(env)
-    measured_angles = []
-    for time in (0.0, TRAJECTORY_DURATION / 2, TRAJECTORY_DURATION):
-        env.apply_kinematic_action(controller.get_action(time))
-        forearm_grip = env.data.site("forearm_grip")
-        club_grip = env.data.site("grip_right")
-        forearm_axis = forearm_grip.xmat.reshape(3, 3)[:, 2]
-        club_axis = club_grip.xmat.reshape(3, 3)[:, 2]
-
-        np.testing.assert_allclose(forearm_grip.xpos, club_grip.xpos, atol=1e-8)
-        included_angle = np.rad2deg(
-            np.arccos(np.clip(np.dot(-forearm_axis, club_axis), -1.0, 1.0))
-        )
-        measured_angles.append(included_angle)
-    np.testing.assert_allclose(measured_angles, measured_angles[0], atol=0.1)
+    np.testing.assert_allclose(env.data.site("ponta_taco").xpos, expected_target)
 
 
 def test_kinematic_swing_changes_arm_without_moving_torso_or_legs():

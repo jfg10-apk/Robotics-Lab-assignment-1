@@ -10,13 +10,10 @@ sys.path.insert(0, str(SRC_DIR))
 from controllers import SwingController
 from env import HumanoidEnv
 from main import _advance_frame
-from trajectory import TRAJECTORY_DURATION
-
-
 def test_kinematic_frame_updates_target_and_advances_clock():
     env = HumanoidEnv()
     controller = SwingController(env)
-    expected_target = controller.get_target_point(0.0)
+    expected_target = env.get_target_site_position(controller.get_action(0.0))
 
     _advance_frame(env, controller, "kinematics", ())
 
@@ -92,7 +89,7 @@ def test_kinematic_action_updates_joint_positions_without_stepping_time():
     initial_angle = env.data.qpos[qpos_address]
     initial_time = env.get_time()
 
-    env.apply_kinematic_action(controller.get_action(4.0))
+    env.apply_kinematic_action(controller.get_action(1.0))
 
     assert env.data.qpos[qpos_address] != initial_angle
     assert env.get_time() == initial_time == 0.0
@@ -119,17 +116,19 @@ def test_physics_swing_moves_only_the_arm_once():
     elbow_qpos = env.model.jnt_qposadr[elbow_joint_id]
     initial_shoulder_angle = env.data.qpos[shoulder_qpos]
     initial_elbow_angle = env.data.qpos[elbow_qpos]
+    maximum_elbow_angle = initial_elbow_angle
 
-    steps = int(TRAJECTORY_DURATION / env.timestep) + 1
+    steps = int(controller.duration / env.timestep) + 1
     for _ in range(steps):
         action = controller.get_action(env.get_time())
         for actuator_id, target in action.items():
             env.data.ctrl[actuator_id] = target
         env.step(locked_joint_names=locked_joint_names)
+        maximum_elbow_angle = max(maximum_elbow_angle, env.data.qpos[elbow_qpos])
 
-    assert env.get_time() >= TRAJECTORY_DURATION
+    assert env.get_time() >= controller.duration
     assert env.data.qpos[shoulder_qpos] != initial_shoulder_angle
-    assert env.data.qpos[elbow_qpos] == initial_elbow_angle
+    assert maximum_elbow_angle > initial_elbow_angle
     for name, position in initial_positions.items():
         np.testing.assert_allclose(env.data.xpos[env.model.body(name).id], position)
 
