@@ -1,6 +1,7 @@
 import numpy as np
 
 from trajectory import (
+    ABDOMEN_Z_JOINT,
     ELBOW_JOINT,
     SHOULDER_JOINT,
     SHOULDER_Y_JOINT,
@@ -26,6 +27,7 @@ class SwingController:
             SHOULDER_Y_JOINT,
             SHOULDER_Z_JOINT,
             ELBOW_JOINT,
+            ABDOMEN_Z_JOINT,
         )
         self._reference_torso_rotation = np.array(
             env.data.xmat[env.model.body("torso").id], dtype=float
@@ -46,9 +48,10 @@ class SwingController:
     def get_action(self, sim_time):
         """Return targets in radians, converting world XYZ rotation to gimbal hinges."""
         path_progress = self._path_progress_at_time(sim_time)
-        shoulder_x_deg, elbow_deg = get_path1_angles(path_progress)
+        shoulder_x_deg, elbow_deg, abdomen_z_deg = get_path1_angles(path_progress)
+        shoulder_y_deg = -20.0
         world_rotation = self._rotation_xyz(
-            np.deg2rad(shoulder_x_deg), 0.0, 0.0
+            np.deg2rad(shoulder_x_deg), np.deg2rad(shoulder_y_deg), 0.0
         ) @ self._reference_torso_rotation
         torso_rotation = np.array(
             self.env.data.xmat[self.env.model.body("torso").id], dtype=float
@@ -61,6 +64,7 @@ class SwingController:
             self.actuator_ids[SHOULDER_Y_JOINT]: shoulder_y,
             self.actuator_ids[SHOULDER_Z_JOINT]: shoulder_z,
             self.actuator_ids[ELBOW_JOINT]: float(np.deg2rad(elbow_deg)),
+            self.actuator_ids[ABDOMEN_Z_JOINT]: float(np.deg2rad(abdomen_z_deg)),
         }
 
     @staticmethod

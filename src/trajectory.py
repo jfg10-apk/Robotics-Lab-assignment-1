@@ -11,6 +11,7 @@ SHOULDER_JOINT = "shoulder1_right"
 SHOULDER_Y_JOINT = "shoulder2_right"
 SHOULDER_Z_JOINT = "shoulder3_right"
 ELBOW_JOINT = "elbow_right"
+ABDOMEN_Z_JOINT = "abdomen_z"
 
 # Path 1's fixed shoulder angles. Edit these to change its geometry.
 THETA1_A_START  = -90.0
@@ -23,6 +24,9 @@ THETA1_C_END    = 90.0
 THETA2_A    = 150.0
 THETA2_C    = 0.0
 
+THETA_ABD_NEUTRAL = 0.0   # Fica neutro (0°) durante o Backswing e Impacto
+THETA_ABD_END     = 45.0  # Roda 45° apenas no Follow-through (após o impacto)
+
 
 def _progress(value: float) -> float:
     """Validate and clamp normalized phase progress to [0, 1]."""
@@ -31,29 +35,30 @@ def _progress(value: float) -> float:
     return float(np.clip(value, 0.0, 1.0))
 
 
-def get_t1_pA_angles(progress: float) -> tuple[float, float]:
+def get_t1_pA_angles(progress: float) -> tuple[float, float, float]:
     """Path 1A: shoulder 90° -> 30° with a constant minimum radius."""
     p = _progress(progress)
     shoulder = THETA1_A_START + p * (THETA1_A_END - THETA1_A_START)
-    return shoulder, THETA2_A
+    return shoulder, THETA2_A, THETA_ABD_NEUTRAL
 
 
-def get_t1_pB_angles(progress: float) -> tuple[float, float]:
+def get_t1_pB_angles(progress: float) -> tuple[float, float, float]:
     """Path 1B: shoulder 30° -> 0° while elbow extension grows the radius."""
     p = _progress(progress)
     shoulder = THETA1_A_END + p * (THETA1_B_END - THETA1_A_END)
     elbow = THETA2_A + p * (THETA2_C - THETA2_A)
-    return shoulder, elbow
+    return shoulder, elbow, THETA_ABD_NEUTRAL
 
 
-def get_t1_pC_angles(progress: float) -> tuple[float, float]:
+def get_t1_pC_angles(progress: float) -> tuple[float, float, float]:
     """Path 1C: shoulder 0° -> -90° with a constant maximum radius."""
     p = _progress(progress)
     shoulder = THETA1_B_END + p * (THETA1_C_END - THETA1_B_END)
-    return shoulder, THETA2_C
+    abdomen_z = THETA_ABD_NEUTRAL + p * (THETA_ABD_END - THETA_ABD_NEUTRAL)
+    return shoulder, THETA2_C, abdomen_z
 
 
-def get_path1_angles(progress: float) -> tuple[float, float]:
+def get_path1_angles(progress: float) -> tuple[float, float, float]:
     """Sample fixed Path 1 with normalized whole-path progress in [0, 1]."""
     phase_position = _progress(progress) * 3.0
     phase_index = min(int(phase_position), 2)
