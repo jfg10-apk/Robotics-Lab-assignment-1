@@ -79,7 +79,9 @@ class HumanoidEnv:
         """Step physics, restoring locked joint poses on both sides of the step."""
         locked_joints = []
         for name in locked_joint_names:
-            joint_id = self.model.joint(name).id
+            joint_id = self.model.joint(name).id # Gets the joint ID from the name
+
+            # Uses ID to obtain joint all joint info
             joint_type = int(self.model.jnt_type[joint_id])
             qpos_size, dof_size = self._joint_state_sizes(joint_type)
             qpos_address = int(self.model.jnt_qposadr[joint_id])

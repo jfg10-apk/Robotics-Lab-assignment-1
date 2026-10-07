@@ -8,7 +8,7 @@ import mujoco.viewer
 from controllers import SwingController
 from env import HumanoidEnv
 
-SIMULATION_MODES = ("physics", "kinematics", "ph", "kin")
+SIMULATION_MODES = ("physics", "kinematics", "ph", "ki")
 
 
 def parse_args():
@@ -39,17 +39,25 @@ def _make_key_callback(reset_requested: threading.Event):
 
 
 def _advance_frame(env, controller, mode, locked_joint_names):
-    """Apply one trajectory frame using the selected simulation mode."""
-    sim_time = env.get_time()
-    action = controller.get_action(sim_time)
+    """
+        Apply one trajectory frame using the selected simulation mode.
+    """
 
-    # Predict the commanded pose on scratch data without changing the live state.
-    env.set_target_marker(env.get_target_site_position(action))
+    sim_time = env.get_time()                   # Simulation moment
+    action = controller.get_action(sim_time)    # Simulation actuation/action by the actuators
+
+   
+
+    env.set_target_marker(env.get_target_site_position(action)) # GREEN MARKER!!!  # Predict the commanded pose on scratch data without changing the live state.
+    
+    # Physics mode:
     if mode in ("ph", "physics"):
         for actuator_id, target in action.items():
             env.data.ctrl[actuator_id] = target
         env.step(locked_joint_names=locked_joint_names)
-    elif mode in ("kin", "kinematics"):
+
+    # Kinematics only mode:
+    elif mode in ("ki", "kinematics"):
         env.apply_kinematic_action(action)
         env.advance_kinematic_time()
     else:

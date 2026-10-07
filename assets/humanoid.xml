@@ -78,7 +78,7 @@
     <body name="target_marker" mocap="true" pos="0 0 0">
       <geom name="target_marker_geom" type="sphere" size=".025" rgba="0.1 1 0.1 0.8" contype="0" conaffinity="0"/>
     </body>
-    <body name="torso" pos="0 0 1.282" childclass="body" euler="0 25 0">
+    <body name="torso" pos="0 0 1.282" childclass="body" euler="0 30 0">
       <camera name="back" pos="-3 0 1" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
       <camera name="side" pos="0 -3 1" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
       <freejoint name="root"/>
@@ -88,10 +88,10 @@
         <geom name="head" type="sphere" size=".09"/>
         <camera name="egocentric" pos=".09 0 0" xyaxes="0 -1 0 .1 0 1" fovy="80"/>
       </body>
-      <body name="waist_lower" pos="-.01 0 -.26" euler="0 -25 0">
+      <body name="waist_lower" pos="-.01 0 -.26" euler="0 -30 0">
         <geom name="waist_lower" fromto="0 -.06 0 0 .06 0" size=".06"/>
         <joint name="abdomen_z" pos="0 0 .065" axis="0 0 1" range="-45 45" class="joint_big_stiff"/>
-        <joint name="abdomen_y" pos="0 0 .065" axis="0 1 0" range="-75 30" class="joint_big"/>
+        <joint name="abdomen_y" pos="0 0 .065" axis="0 1 0" range="-75 30" class="joint_big" ref="10"/>
         <body name="pelvis" pos="0 0 -.165">
           <joint name="abdomen_x" pos="0 0 .1" axis="1 0 0" range="-35 35" class="joint_big"/>
           <geom name="butt" fromto="-.02 -.07 0 -.02 .07 0" size=".09"/>
@@ -118,23 +118,31 @@
         </body>
       </body>
       <body name="upper_arm_right" pos="0 -.17 .06">
-        <joint name="shoulder1_right" axis="2 1 1" class="shoulder"/>
-        <joint name="shoulder2_right" axis="0 -1 1" class="shoulder"/>
-        <geom name="upper_arm_right" fromto="0 0 0 .16 -.16 -.16" class="arm_upper"/>
-        <body name="lower_arm_right" pos=".18 -.18 -.18">
-          <joint name="elbow_right" axis="0 -1 1" class="elbow"/>
-          <geom name="lower_arm_right" fromto=".01 -.01 -.01 .17 -.17 -.17" class="arm_lower"/>
-          <site name="forearm_grip" pos=".18 -.18 -.18" zaxis="1 -1 -1"/>
-          <include file="club.xml"/>
-          <body name="hand_right" pos=".18 -.18 -.18">
+        <!-- <joint name="shoulder1_right" axis="1 0 0" class="shoulder"/>
+        <joint name="shoulder2_right" axis=".8775 0 0.5" class="shoulder" />
+        <joint name="shoulder3_right" axis="0 1 0" class="shoulder" /> -->
+        <joint name="shoulder1_right" axis="1 0 0" class="shoulder" ref="0"/>
+        <joint name="shoulder2_right" axis="0 1 0" class="shoulder" ref="50"/>
+        <joint name="shoulder3_right" axis="0 0 1" class="shoulder" ref="0"/>
+        <!-- <geom name="upper_arm_right" fromto="0 0 0 .16 -.16 -.16" class="arm_upper"/> -->
+        <geom name="upper_arm_right" fromto="0 0 0  0 0 -.2772" class="arm_upper" />
+        <!-- <body name="lower_arm_right" pos=".18 -.18 -.18"> -->
+        <body name="lower_arm_right" pos="0 0.01 -.3118">
+          <joint name="elbow_right" axis="0 -1 0" class="elbow"/>
+          <!-- <geom name="lower_arm_right" fromto=".01 -.01 -.01 .17 -.17 -.17" class="arm_lower"/> -->
+          <geom name="lower_arm_right" fromto=".01 -.01 -.01  .01 -.01 -.2872" class="arm_lower" />
+          <site name="forearm_grip" pos=".01 -.01 -.2972" zaxis="1 -1 -1" />
+          <body name="hand_right" pos=".01 -.01 -.2972">
             <joint name="pulso_right" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
+            <include file="club.xml"/>
             <geom name="hand_right" zaxis="1 1 1" class="hand"/>
           </body>
         </body>
       </body>
       <body name="upper_arm_left" pos="0 .17 .06">
-        <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder"/>
-        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder"/>
+        <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder" ref="-30"/>
+        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="0"/>
+        <joint name="shoulder3_left" axis="0 1 0" class="shoulder" ref="0" />
         <!-- Group 2 is hidden by the viewer in single-arm mode. -->
         <geom name="upper_arm_left" fromto="0 0 0 .16 .16 -.16" class="arm_upper" group="2"/>
         <body name="lower_arm_left" pos=".18 .18 -.18">
@@ -165,11 +173,13 @@
 
     <position name="shoulder1_right" joint="shoulder1_right"/>
     <position name="shoulder2_right" joint="shoulder2_right"/>
+    <position name="shoulder3_right" joint="shoulder3_right"/>
     <position name="elbow_right" joint="elbow_right"/>
     <position name="pulso_right" joint="pulso_right"/>
 
     <position name="shoulder1_left" joint="shoulder1_left"/>
     <position name="shoulder2_left" joint="shoulder2_left"/>
+    <position name="shoulder3_left" joint="shoulder3_left"/>
     <position name="elbow_left" joint="elbow_left"/>
     <position name="pulso_left" joint="pulso_left"/>
   </actuator>
