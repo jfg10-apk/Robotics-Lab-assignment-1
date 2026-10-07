@@ -1,13 +1,12 @@
 <mujoco>
-  <frame pos="0 0 0"
-         xyaxes="-.707107 -.707107 0 .408248 -.408248 .816497">
-    <body name="club" euler="180 0 0">
+  <frame pos="0 0 0">
+    <body name="club" euler="180 0 90">
       <site name="grip_right" pos="0 0 0" size="0.015" rgba="0 1 0 1"/>
-      <geom name="haste" type="capsule" fromto="0 0 0 0 0 .55" size="0.009" mass="0.12" rgba="0.75 0.78 0.82 1"/>
-      <geom name="cabeca_taco" type="box" pos="0 -0.065 .55" euler="0 0 0" size="0.02 0.065 0.025"
+      <geom name="haste" type="capsule" fromto="0 0 0 0 0 .58" size="0.009" mass="0.12" rgba="0.75 0.78 0.82 1"/>
+      <geom name="cabeca_taco" type="box" pos="0 -0.065 .58" euler="0 0 0" size="0.02 0.065 0.025"
         mass="0.20" rgba="0.95 0.65 0.12 1" contype="1" conaffinity="2" friction="0.4 0.005 0.001"
         solref="0.001 0.7" solimp="0.95 0.99 0.001" />
-      <site name="ponta_taco" pos="0 0 .55" size="0.012" rgba="1 0.3 0.1 1"/>
+      <site name="ponta_taco" pos="0 0 .58" size="0.012" rgba="1 0.3 0.1 1"/>
     </body>
   </frame>
 </mujoco>

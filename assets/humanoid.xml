@@ -117,31 +117,36 @@
           </body>
         </body>
       </body>
-      <body name="upper_arm_right" pos="0 -.17 .06">
-        <!-- <joint name="shoulder1_right" axis="1 0 0" class="shoulder"/>
-        <joint name="shoulder2_right" axis=".8775 0 0.5" class="shoulder" />
-        <joint name="shoulder3_right" axis="0 1 0" class="shoulder" /> -->
-        <joint name="shoulder1_right" axis="1 0 0" class="shoulder" ref="0"/>
-        <joint name="shoulder2_right" axis="0 1 0" class="shoulder" ref="50"/>
-        <joint name="shoulder3_right" axis="0 0 1" class="shoulder" ref="0"/>
-        <!-- <geom name="upper_arm_right" fromto="0 0 0 .16 -.16 -.16" class="arm_upper"/> -->
-        <geom name="upper_arm_right" fromto="0 0 0  0 0 -.2772" class="arm_upper" />
-        <!-- <body name="lower_arm_right" pos=".18 -.18 -.18"> -->
-        <body name="lower_arm_right" pos="0 0.01 -.3118">
-          <joint name="elbow_right" axis="0 -1 0" class="elbow"/>
-          <!-- <geom name="lower_arm_right" fromto=".01 -.01 -.01 .17 -.17 -.17" class="arm_lower"/> -->
-          <geom name="lower_arm_right" fromto=".01 -.01 -.01  .01 -.01 -.2872" class="arm_lower" />
-          <site name="forearm_grip" pos=".01 -.01 -.2972" zaxis="1 -1 -1" />
-          <body name="hand_right" pos=".01 -.01 -.2972">
-            <joint name="pulso_right" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
-            <include file="club.xml"/>
-            <geom name="hand_right" zaxis="1 1 1" class="hand"/>
+      <body name="upper_arm_right" pos="0 -.17 .06" euler="0 -50 0">
+        <joint name="shoulder3_right" axis="0 0 1" range="-360 360" class="shoulder" ref="0"/>
+        <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+        <body name="shoulder2_pivot" pos="0 0 0">
+          <joint name="shoulder2_right" axis="0 1 0" range="-360 360" class="shoulder" ref="0"/>
+          <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+          <body name="shoulder1_pivot" pos="0 0 0">
+            <joint name="shoulder1_right" axis="1 0 0" range="-360 360" class="shoulder" ref="0"/>
+            <!-- Z-Y-X nesting maps world-referenced XYZ Euler targets to hinge coordinates. -->
+            <geom name="upper_arm_right" fromto="0 0 0 0 0 -.2772" class="arm_upper"/>
+            <body name="lower_arm_right" pos="0 0.01 -.3118">
+              <joint name="elbow_right" axis="0 -1 0" class="elbow"/>
+              <geom name="lower_arm_right" fromto=".01 -.01 -.01 .01 -.01 -.2872" class="arm_lower"/>
+              <site name="forearm_grip" pos=".01 -.01 -.2972" zaxis="1 -1 -1"/>
+              <body name="hand_right" pos=".01 -.01 -.2972">
+                <joint name="pulso_right" axis="1 0 0" range="-100 100" damping="0.08"
+                  frictionloss="0.02"/>
+                <joint name="pulso_right1" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
+                <joint name="pulso_right2" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
+                <joint name="pulso_right3" axis="0 0 1" range="-100 100" damping="0.08" frictionloss="0.02"/>
+                <include file="club.xml"/>
+                <geom name="hand_right" zaxis="1 1 1" class="hand"/>
+              </body>
+            </body>
           </body>
         </body>
       </body>
-      <body name="upper_arm_left" pos="0 .17 .06">
+      <body name="upper_arm_left" pos="0 .17 .06" euler="0 50 0">
         <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder" ref="-30"/>
-        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="0"/>
+        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="30"/>
         <joint name="shoulder3_left" axis="0 1 0" class="shoulder" ref="0" />
         <!-- Group 2 is hidden by the viewer in single-arm mode. -->
         <geom name="upper_arm_left" fromto="0 0 0 .16 .16 -.16" class="arm_upper" group="2"/>
@@ -175,7 +180,11 @@
     <position name="shoulder2_right" joint="shoulder2_right"/>
     <position name="shoulder3_right" joint="shoulder3_right"/>
     <position name="elbow_right" joint="elbow_right"/>
+
     <position name="pulso_right" joint="pulso_right"/>
+    <position name="pulso_right1" joint="pulso_right1"/>
+    <position name="pulso_right2" joint="pulso_right2"/>
+    <position name="pulso_right3" joint="pulso_right3"/>
 
     <position name="shoulder1_left" joint="shoulder1_left"/>
     <position name="shoulder2_left" joint="shoulder2_left"/>

@@ -13,6 +13,8 @@ from main import _make_key_callback
 from trajectory import (
     ELBOW_JOINT,
     SHOULDER_JOINT,
+    SHOULDER_Y_JOINT,
+    SHOULDER_Z_JOINT,
     THETA1_A_END,
     THETA1_A_START,
     THETA1_B_END,
@@ -47,12 +49,11 @@ def test_controller_commands_shoulder_and_elbow_in_radians():
 
     assert set(action) == {
         controller.actuator_ids[SHOULDER_JOINT],
+        controller.actuator_ids[SHOULDER_Y_JOINT],
+        controller.actuator_ids[SHOULDER_Z_JOINT],
         controller.actuator_ids[ELBOW_JOINT],
     }
-    np.testing.assert_allclose(
-        action[controller.actuator_ids[SHOULDER_JOINT]],
-        np.deg2rad(THETA1_A_START),
-    )
+    assert all(np.isfinite(target) for target in action.values())
 
 
 def test_environment_imports_xml_parameters_for_controller():
@@ -73,7 +74,9 @@ def test_environment_imports_xml_parameters_for_controller():
     np.testing.assert_allclose(env.omega2, np.pi / 2)
 
     for joint_name, expected_range in (
-        (SHOULDER_JOINT, (-90.0, 90.0)),
+        (SHOULDER_JOINT, (-360.0, 360.0)),
+        (SHOULDER_Y_JOINT, (-360.0, 360.0)),
+        (SHOULDER_Z_JOINT, (-360.0, 360.0)),
         (ELBOW_JOINT, (0.0, 180.0)),
     ):
         joint_id = env.model.joint(joint_name).id
@@ -84,7 +87,12 @@ def test_environment_imports_xml_parameters_for_controller():
 
     controller = SwingController(env)
     assert controller.actuator_ids is env.actuator_ids
-    assert controller.joint_names == (SHOULDER_JOINT, ELBOW_JOINT)
+    assert controller.joint_names == (
+        SHOULDER_JOINT,
+        SHOULDER_Y_JOINT,
+        SHOULDER_Z_JOINT,
+        ELBOW_JOINT,
+    )
 
 
 def test_path1_phases_define_fixed_poses_and_connect_continuously():
@@ -117,24 +125,33 @@ def test_path_geometry_is_independent_of_execution_speed():
 
 
 def test_controller_traverses_all_three_phases_and_holds_final_pose():
-    controller = SwingController(HumanoidEnv())
+    env = HumanoidEnv()
+    controller = SwingController(env)
     a_duration, b_duration, _ = controller.phase_durations
 
     phase_a_boundary = controller.get_action(a_duration)
     phase_b_boundary = controller.get_action(a_duration + b_duration)
     final_action = controller.get_action(controller.duration)
 
-    np.testing.assert_allclose(
-        phase_a_boundary[controller.actuator_ids[SHOULDER_JOINT]],
-        np.deg2rad(THETA1_A_END),
-    )
+    # Apply each target and verify the resulting shoulder orientation is the
+    # requested rotation about world X, not a torso-local hinge angle.
+    for action, shoulder_deg in (
+        (phase_a_boundary, THETA1_A_END),
+        (phase_b_boundary, THETA1_B_END),
+        (final_action, THETA1_C_END),
+    ):
+        env.apply_kinematic_action(action)
+        actual_rotation = np.array(
+            env.data.xmat[env.model.body("shoulder1_pivot").id]
+        ).reshape(3, 3)
+        expected_rotation = controller._rotation_xyz(
+            np.deg2rad(shoulder_deg), 0.0, 0.0
+        ) @ controller._reference_torso_rotation
+        np.testing.assert_allclose(actual_rotation, expected_rotation, atol=1e-8)
+
     np.testing.assert_allclose(
         phase_b_boundary[controller.actuator_ids[ELBOW_JOINT]],
         np.deg2rad(THETA2_C),
-    )
-    np.testing.assert_allclose(
-        final_action[controller.actuator_ids[SHOULDER_JOINT]],
-        np.deg2rad(THETA1_C_END),
     )
     assert controller.get_action(controller.duration + 1.0) == final_action
 

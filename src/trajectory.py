@@ -8,6 +8,8 @@ simulation time to phase progress using a separate speed profile.
 import numpy as np
 
 SHOULDER_JOINT = "shoulder1_right"
+SHOULDER_Y_JOINT = "shoulder2_right"
+SHOULDER_Z_JOINT = "shoulder3_right"
 ELBOW_JOINT = "elbow_right"
 
 # Path 1's fixed shoulder angles. Edit these to change its geometry.
@@ -18,7 +20,7 @@ THETA1_C_END    = 90.0
 
 # Elbow angles set effective radius: 180° folds the links (minimum reach);
 # 0° aligns them (maximum reach). Phase B transitions between these poses.
-THETA2_A    = 180.0
+THETA2_A    = 150.0
 THETA2_C    = 0.0
 
 
