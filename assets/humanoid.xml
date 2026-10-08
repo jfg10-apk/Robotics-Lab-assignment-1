@@ -144,7 +144,7 @@
           </body>
         </body>
       </body>
-      <body name="upper_arm_left" pos="0 .17 .06" euler="0 50 0">
+      <body name="upper_arm_left" pos="0 .17 .06" euler="0 90 0">
         <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder" ref="-30"/>
         <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="30"/>
         <joint name="shoulder3_left" axis="0 1 0" class="shoulder" ref="0" />
