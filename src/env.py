@@ -58,12 +58,19 @@ class HumanoidEnv:
         """Lock undriven player joints while leaving independent objects free."""
         torso_id = self.model.body("torso").id
         locked = []
+
+        # Lista das articulações que devem estar "soltas"
+        limp_joints = (
+            "shoulder1_left", "shoulder2_left", "shoulder3_left", 
+            "elbow_left", "pulso_left"
+        )
+
         for joint_id in range(self.model.njnt):
             body_id = int(self.model.jnt_bodyid[joint_id])
             while body_id != 0 and body_id != torso_id:
                 body_id = int(self.model.body_parentid[body_id])
             name = self.model.joint(joint_id).name
-            if body_id == torso_id and name not in driven_joint_names:
+            if body_id == torso_id and name not in driven_joint_names and name not in limp_joints:
                 locked.append(name)
         return tuple(locked)
 

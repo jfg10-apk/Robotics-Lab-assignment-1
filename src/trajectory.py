@@ -1,122 +1,102 @@
 """
-    Description of the trajectories + actuation
-
-    The current test motion turns the first right-shoulder hinge 180 degrees over
-six seconds. Targets are returned in radians, as required by MuJoCo.
+    Description of the trajectories + actuation (com fase de Pull Back)
 """
 
 from collections.abc import Callable
-
 import numpy as np
 
+# Nomes das juntas no MuJoCo
 SHOULDER_RX = "shoulder1_right"
 ELBOW_RY = "elbow_right"
 ANKLE_Z = "abdomen_z"
 ANKLE_Y = "abdomen_y"
 
+# VELOCIDADES ORIGINAIS (Fase de Swing)
+OMEGA_RX_A = 60.0       # [degrees/s] Velocidade de descida do ombro
+OMEGA_RY_B = 300.0      # [degrees/s] Velocidade de extensão do cotovelo
+OMEGA_ANKLE = 1.0       # [degrees/s] Velocidade de rotação do tronco
 
-START_ANGLE_DEGREES = -90.0
-END_ANGLE_DEGREES = 90.0
-OMEGA_RX_A = 60.0 # [degrees/s]
-OMEGA_RY_B = 300.0 # [degrees/s]
-OMEGA_ANKLE_Z = 1.0 # [degrees/s]
+# TEMPOS 
+T_BACKSWING = 1.5       # Tempo gasto a fazer o "pull back" 
 
+#  ÂNGULOS ALVO 
+# Ombro (shoulder1_right)
+ADDRESS_SHOULDER = 0.0          # Arranque (esticado para baixo)
+BACKSWING_SHOULDER = -100.0     # Topo do backswing
+FOLLOW_THROUGH_SHOULDER = 90.0  # Fim do movimento
 
+# Cotovelo (elbow_right)
+ADDRESS_ELBOW = 0.0             # Esticado no arranque
+BACKSWING_ELBOW = 90.0          # Dobra no topo do backswing para ganhar balanço
+IMPACT_ELBOW = 0.0              # Limite para esticar no impacto
 
-# START_JNTRX_PART_A = -100.0
-# START_JNTRX_PART_C = 0.0
-START_JNTRX_PART_A = -100.0
-START_JNTRX_PART_C = -0.0
-
-
-# START_JNTRY_PART_B = 35.0
-# START_JNTRY_PART_C = 180.0
-START_JNTRY_PART_B = 0.0
-START_JNTRY_PART_C = 145.0
-
-
-START_ANKLE_PA = -45.0
-END_ANKLE_PA = 45.0
-
-
-START_TIME = 0.0
-DURATION_A = (
-    START_JNTRX_PART_C - START_JNTRX_PART_A
-) / OMEGA_ANKLE_Z
-
-DURATION_B = (
-    START_JNTRY_PART_C - START_JNTRY_PART_B
-) / OMEGA_ANKLE_Z
-
-DURATION_ANKLE = np.abs(
-    START_ANKLE_PA - END_ANKLE_PA
-) / OMEGA_ANKLE_Z
+# Tronco (abdomen_z e abdomen_y)
+ADDRESS_ANKLE = 0.0             # Neutro de frente
+BACKSWING_ANKLE = -20.0         # Torção para trás
+FOLLOW_THROUGH_ANKLE = 45.0     # Torção para a frente
 
 
-
-# Add another joint here, mapping its MuJoCo joint name to an angle function
-# that accepts time in seconds and returns its angle in degrees.
-
-
-def _clip_time(sim_time: float, duration: float) -> float:
-    return float(np.clip(sim_time, START_TIME, duration))
-
-def _duration(start_phi: float, end_phi: float, omega: float) -> float:
-    return (end_phi - start_phi) / omega
-
-
-def shoulder_rx(delta_t: float) -> float:
-    """
-        Evaluates theta1(t), the angle of the right shoulder.
-
-        Hold the one-shot motion at its endpoint before t=0 and after its
-    six-second duration.
-
-        To be enhanced with inverse kinematics plan.
-    """
-
-    return (OMEGA_RX_A * float(_clip_time(delta_t, DURATION_A)) +
-             + START_JNTRX_PART_A)
+def shoulder_rx(sim_t: float) -> float:
+    if sim_t <= T_BACKSWING:
+        # Pull Back lento
+        progress = sim_t / T_BACKSWING
+        return ADDRESS_SHOULDER + progress * (BACKSWING_SHOULDER - ADDRESS_SHOULDER)
+    else:
+        # Swing usando a tua velocidade (OMEGA_RX_A)
+        delta_t = sim_t - T_BACKSWING
+        angle = BACKSWING_SHOULDER + (OMEGA_RX_A * delta_t)
+        # Limita o ângulo para não passar do follow-through
+        return min(angle, FOLLOW_THROUGH_SHOULDER)
 
 
-def elbow_ry(delta_t: float) -> float:
-    """
-        Evaluates theta2(t), the angle of the right elbow.
-    """
-    return (START_JNTRY_PART_C - OMEGA_RY_B * float(_clip_time(delta_t, DURATION_B)))
+def elbow_ry(sim_t: float) -> float:
+    if sim_t <= T_BACKSWING:
+        #  Dobra o cotovelo no pull back
+        progress = sim_t / T_BACKSWING
+        return ADDRESS_ELBOW + progress * (BACKSWING_ELBOW - ADDRESS_ELBOW)
+    else:
+        # Estica usando a tua velocidade super rápida (OMEGA_RY_B)
+        delta_t = sim_t - T_BACKSWING
+        angle = BACKSWING_ELBOW - (OMEGA_RY_B * delta_t)
+        # Limita para não dobrar ao contrário (0.0 = esticado)
+        return max(angle, IMPACT_ELBOW)
 
 
-def ankle_z(delta_t: float) -> float:
-    """
-        Evaluates theta3(t), the angle of the ankle rotation in the z axis.
-    """
-    return (OMEGA_ANKLE_Z * float(_clip_time(delta_t, DURATION_ANKLE)))
+def ankle_z(sim_t: float) -> float:
+    if sim_t <= T_BACKSWING:
+        
+        progress = sim_t / T_BACKSWING
+        return ADDRESS_ANKLE + progress * (BACKSWING_ANKLE - ADDRESS_ANKLE)
+    else:
+        
+        delta_t = sim_t - T_BACKSWING
+        angle = BACKSWING_ANKLE + (OMEGA_ANKLE * delta_t)
+        return min(angle, FOLLOW_THROUGH_ANKLE)
 
-def ankle_y(delta_t: float) -> float:
-    return (OMEGA_ANKLE_Z * float(_clip_time(delta_t, DURATION_ANKLE)))
+
+def ankle_y(sim_t: float) -> float:
+    # Segue a mesma lógica do eixo Z
+    if sim_t <= T_BACKSWING:
+        progress = sim_t / T_BACKSWING
+        return ADDRESS_ANKLE + progress * (BACKSWING_ANKLE - ADDRESS_ANKLE)
+    else:
+        delta_t = sim_t - T_BACKSWING
+        angle = BACKSWING_ANKLE + (OMEGA_ANKLE * delta_t)
+        return min(angle, FOLLOW_THROUGH_ANKLE)
 
 
-
-"""
-    Multi Joint dictionary: Maps each identifier string to the corresponding function
-"""
-
+# Mantido o dicionário com todas as tuas juntas
 JOINT_TRAJECTORIES: dict[str, Callable[[float], float]] = {
-    SHOULDER_RX: shoulder_rx, # Right shoulder, x axis
-    ELBOW_RY: elbow_ry, # Right elbow, y axis
-    ANKLE_Z: ankle_z, # Ankle rotation, z axis
-    ANKLE_Y: ankle_y # Ankle rotation, y axis
+    SHOULDER_RX: shoulder_rx,
+    ELBOW_RY: elbow_ry,
+    ANKLE_Z: ankle_z,
+    ANKLE_Y: ankle_y
 }
 
 
-
 def get_joint_targets(sim_t: float) -> dict[str, float]:
-    """
-        Return targets for all configured joints, converted from degrees to radians.
-    """
+    """Converte os ângulos de graus para radianos para o MuJoCo."""
     return {
         joint_name: float(np.deg2rad(joint_trajectory(sim_t)))
         for joint_name, joint_trajectory in JOINT_TRAJECTORIES.items()
     }
-
-
