@@ -11,32 +11,46 @@ import numpy as np
 
 SHOULDER_RX = "shoulder1_right"
 ELBOW_RY = "elbow_right"
+ANKLE_Z = "abdomen_z"
+ANKLE_Y = "abdomen_y"
 
 
 START_ANGLE_DEGREES = -90.0
 END_ANGLE_DEGREES = 90.0
 OMEGA_RX_A = 60.0 # [degrees/s]
 OMEGA_RY_B = 300.0 # [degrees/s]
+OMEGA_ANKLE_Z = 1.0 # [degrees/s]
 
 
 
-
+# START_JNTRX_PART_A = -100.0
+# START_JNTRX_PART_C = 0.0
 START_JNTRX_PART_A = -100.0
-START_JNTRX_PART_B = -60.0
-START_JNTRX_PART_C = 0.0
+START_JNTRX_PART_C = -0.0
 
-START_JNTRY_PART_B = 35.0
-START_JNTRY_PART_C = 180.0
+
+# START_JNTRY_PART_B = 35.0
+# START_JNTRY_PART_C = 180.0
+START_JNTRY_PART_B = 0.0
+START_JNTRY_PART_C = 145.0
+
+
+START_ANKLE_PA = -45.0
+END_ANKLE_PA = 45.0
 
 
 START_TIME = 0.0
 DURATION_A = (
     START_JNTRX_PART_C - START_JNTRX_PART_A
-) / OMEGA_RX_A
+) / OMEGA_ANKLE_Z
 
 DURATION_B = (
     START_JNTRY_PART_C - START_JNTRY_PART_B
-) / OMEGA_RY_B
+) / OMEGA_ANKLE_Z
+
+DURATION_ANKLE = np.abs(
+    START_ANKLE_PA - END_ANKLE_PA
+) / OMEGA_ANKLE_Z
 
 
 
@@ -72,18 +86,26 @@ def elbow_ry(delta_t: float) -> float:
     return (START_JNTRY_PART_C - OMEGA_RY_B * float(_clip_time(delta_t, DURATION_B)))
 
 
-def static_joint(delta_t: float) -> float:
-    return -90.0
+def ankle_z(delta_t: float) -> float:
+    """
+        Evaluates theta3(t), the angle of the ankle rotation in the z axis.
+    """
+    return (OMEGA_ANKLE_Z * float(_clip_time(delta_t, DURATION_ANKLE)))
+
+def ankle_y(delta_t: float) -> float:
+    return (OMEGA_ANKLE_Z * float(_clip_time(delta_t, DURATION_ANKLE)))
+
+
+
 """
-    Multi Joint mapping dictionary:
-    str: Joint name given to XML model body part
-    float array: time
-    float: angle (degrees)
+    Multi Joint dictionary: Maps each identifier string to the corresponding function
 """
 
 JOINT_TRAJECTORIES: dict[str, Callable[[float], float]] = {
-    SHOULDER_RX: static_joint, # Right shoulder, x axis
-    ELBOW_RY: elbow_ry # Right elbow, y axis
+    SHOULDER_RX: shoulder_rx, # Right shoulder, x axis
+    ELBOW_RY: elbow_ry, # Right elbow, y axis
+    ANKLE_Z: ankle_z, # Ankle rotation, z axis
+    ANKLE_Y: ankle_y # Ankle rotation, y axis
 }
 
 

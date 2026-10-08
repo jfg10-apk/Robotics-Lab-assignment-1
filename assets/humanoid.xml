@@ -90,7 +90,7 @@
       </body>
       <body name="waist_lower" pos="-.01 0 -.26" euler="0 -30 0">
         <geom name="waist_lower" fromto="0 -.06 0 0 .06 0" size=".06"/>
-        <joint name="abdomen_z" pos="0 0 .065" axis="0 0 1" range="-45 45" class="joint_big_stiff"/>
+        <joint name="abdomen_z" pos="0 0 .065" axis="0 0 1" range="-55 55" class="joint_big_stiff"/>
         <joint name="abdomen_y" pos="0 0 .065" axis="0 1 0" range="-75 30" class="joint_big" ref="10"/>
         <body name="pelvis" pos="0 0 -.165">
           <joint name="abdomen_x" pos="0 0 .1" axis="1 0 0" range="-35 35" class="joint_big"/>
@@ -117,7 +117,7 @@
           </body>
         </body>
       </body>
-      <body name="upper_arm_right" pos="0 -.17 .06" euler="0 -50 0">
+      <body name="upper_arm_right" pos="0 -.17 .06" euler="-2 -30 0">
         <joint name="shoulder3_right" axis="0 0 1" range="-180 180" class="shoulder" ref="0" />
         <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
         <body name="shoulder2_pivot" pos="0 0 0">
@@ -144,10 +144,10 @@
           </body>
         </body>
       </body>
-      <body name="upper_arm_left" pos="0 .17 .06" euler="0 50 0">
-        <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder" ref="-30"/>
-        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="30"/>
-        <joint name="shoulder3_left" axis="0 1 0" class="shoulder" ref="0" />
+      <body name="upper_arm_left" pos="0 .17 .06" euler="0 90 0">
+        <joint name="shoulder1_left" axis="-2 1 -1" class="shoulder" ref="0" />
+        <joint name="shoulder2_left" axis="0 -1 -1" class="shoulder" ref="0" />
+        <joint name="shoulder3_left" axis="0 1 0" class="shoulder" ref="0"/>
         <!-- Group 2 is hidden by the viewer in single-arm mode. -->
         <geom name="upper_arm_left" fromto="0 0 0 .16 .16 -.16" class="arm_upper" group="2"/>
         <body name="lower_arm_left" pos=".18 .18 -.18">
