@@ -118,13 +118,13 @@
         </body>
       </body>
       <body name="upper_arm_right" pos="0 -.17 .06" euler="0 -50 0">
-        <joint name="shoulder3_right" axis="0 0 1" range="-360 360" class="shoulder" ref="0"/>
+        <joint name="shoulder3_right" axis="0 0 1" range="-180 180" class="shoulder" ref="0" />
         <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
         <body name="shoulder2_pivot" pos="0 0 0">
-          <joint name="shoulder2_right" axis="0 1 0" range="-360 360" class="shoulder" ref="0"/>
+          <joint name="shoulder2_right" axis="0 1 0" range="-180 180" class="shoulder" ref="0" />
           <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
           <body name="shoulder1_pivot" pos="0 0 0">
-            <joint name="shoulder1_right" axis="1 0 0" range="-360 360" class="shoulder" ref="0"/>
+            <joint name="shoulder1_right" axis="1 0 0" range="-180 180" class="shoulder" ref="0"/>
             <!-- Z-Y-X nesting maps world-referenced XYZ Euler targets to hinge coordinates. -->
             <geom name="upper_arm_right" fromto="0 0 0 0 0 -.2772" class="arm_upper"/>
             <body name="lower_arm_right" pos="0 0.01 -.3118">

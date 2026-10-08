@@ -10,6 +10,9 @@ sys.path.insert(0, str(SRC_DIR))
 from controllers import SwingController
 from env import HumanoidEnv
 from main import _advance_frame
+from trajectory import DURATION_SECONDS
+
+
 def test_kinematic_frame_updates_target_and_advances_clock():
     env = HumanoidEnv()
     controller = SwingController(env)
@@ -118,7 +121,7 @@ def test_physics_swing_moves_only_the_arm_once():
     initial_elbow_angle = env.data.qpos[elbow_qpos]
     maximum_elbow_angle = initial_elbow_angle
 
-    steps = int(controller.duration / env.timestep) + 1
+    steps = int(DURATION_SECONDS / env.timestep) + 1
     for _ in range(steps):
         action = controller.get_action(env.get_time())
         for actuator_id, target in action.items():
@@ -126,9 +129,10 @@ def test_physics_swing_moves_only_the_arm_once():
         env.step(locked_joint_names=locked_joint_names)
         maximum_elbow_angle = max(maximum_elbow_angle, env.data.qpos[elbow_qpos])
 
-    assert env.get_time() >= controller.duration
+    assert env.get_time() >= DURATION_SECONDS
     assert env.data.qpos[shoulder_qpos] != initial_shoulder_angle
-    assert maximum_elbow_angle > initial_elbow_angle
+    np.testing.assert_allclose(env.data.qpos[elbow_qpos], initial_elbow_angle)
+    assert maximum_elbow_angle == initial_elbow_angle
     for name, position in initial_positions.items():
         np.testing.assert_allclose(env.data.xpos[env.model.body(name).id], position)
 

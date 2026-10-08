@@ -22,7 +22,7 @@ This project implements a MuJoCo humanoid simulation with a modular structure to
 │   ├── main.py             # entry point for the simulation loop
 │   ├── env.py              # MuJoCo environment wrapper
 │   ├── controllers.py      # controller mapping motion targets to actuators
-│   ├── trajectory.py       # fixed geometric paths, parameterized by progress
+│   ├── trajectory.py       # time-based joint target equations
 │   ├── kinematics.py       # standalone planar two-link helpers
 │   ├── Lab1.py             # backward compatible wrapper
 │   └── ...
@@ -126,53 +126,61 @@ stepping. Kinematics mode writes the selected joint positions directly, updates
 the displayed pose with `mj_forward`, and advances the simulation clock without
 stepping physics.
 
-Path 1 is defined in `src/trajectory.py` as three geometric phases, sampled by
-normalized progress rather than simulation time:
+Path 1 is currently inactive. The active example trajectory in
+`src/trajectory.py` commands only `shoulder1_right` using the algebraic
+function:
 
-- A: shoulder world-X rotation −90°→−30°, elbow held at 180° (minimum reach).
-- B: shoulder world-X rotation −30°→0°, elbow 180°→0° (the reach increases).
-- C: shoulder world-X rotation 0°→90°, elbow held at 0° (maximum reach).
+```text
+theta1(t) = 30 degrees/second * t - 90 degrees
+```
 
-These pose functions do not read actuator settings, angular velocities, or
-simulation time. Edit their angle boundaries to change Path 1 itself. The
-controller separately maps elapsed simulation time to phase progress. The
-right shoulder is a three-hinge gimbal nested in Z-Y-X order around one pivot.
-The controller treats the trajectory's shoulder angle as a world-referenced X
-rotation and converts the requested XYZ orientation to the corresponding local
-hinge targets. The XML shoulder range is ±360° to permit full turns. The
-gimbal's physical hinge axes still move with the rotating links; only the
-rotation inputs use the fixed world XYZ reference. World XYZ rotations use a
-defined order, so combining rotations about multiple axes is order-dependent.
-As with any Euler-angle representation, the conversion has a singular
-configuration at certain combined rotations. The current Path 1 varies only
-the world-X input. The `omega1` and `omega2` speed settings are initialized to
-`pi / 2` radians per
-second in `HumanoidEnv._import_parameters()` in `src/env.py`; they set the
-phase durations, not the geometry. In phase B the longer of the shoulder and
-elbow travel times sets the duration, and both joints interpolate over that
-shared phase. As a result, changing a speed changes when the pose is reached,
-not which poses define the path.
+It starts at −90° at `t=0`, reaches +90° at `t=6` seconds (a 180° turn), then
+holds that endpoint. The angle is about the local X axis of the
+`shoulder1_right` hinge; it is not converted to a world-X orientation. Change
+`START_ANGLE_DEGREES`, `END_ANGLE_DEGREES`, or
+`ANGULAR_SPEED_DEGREES_PER_SECOND` in `src/trajectory.py` to adjust this
+example. `get_joint_targets(time_seconds)` returns joint-name targets in
+radians for every trajectory registered in `JOINT_TRAJECTORIES`. To add a
+second joint, define another function of time that returns degrees, then add
+the function under that joint's MuJoCo name:
 
-Actuator gains and MuJoCo physics affect how closely the physical arm tracks
-these targets; they do not modify the fixed Path 1 definition. Angles in
-`trajectory.py` are expressed in degrees and converted to radians by the
-controller before sending targets to MuJoCo. The XML position-actuator `kv`
-setting is velocity feedback/damping, not a commanded angular speed.
+```python
+def elbow_trajectory(time_seconds):
+    return 45.0  # Hold the elbow at 45 degrees.
 
-Trajectory progress is calculated from the current simulation clock, so
-Backspace resets both the MuJoCo state and trajectory progress. The green
-marker shows the predicted tip location for the current joint targets.
+
+JOINT_TRAJECTORIES = {
+    SHOULDER_JOINT: trajectory_1,
+    "elbow_right": elbow_trajectory,
+}
+```
+
+The existing shoulder equation is evaluated independently, so registering an
+elbow trajectory does not change its shoulder targets. The controller maps
+every registered joint name to its actuator; each name must therefore have a
+matching actuator in `assets/humanoid.xml`.
+
+Trajectory and actuator responsibilities are separated: `trajectory.py`
+calculates the desired joint angle from time, while `controllers.py` maps that
+joint name to its MuJoCo actuator ID. The main loop passes the same targets to
+either physics mode or kinematics mode. Backspace resets simulation time, so
+the trajectory starts over. The green marker shows the predicted tip position
+for the commanded targets.
+
+The XML position actuators use proportional position feedback (`kp`) and
+velocity damping (`kv`); this is PD-style actuation, not a full PID controller
+with integral action. In physics mode, these settings control how closely a
+joint tracks its target. Kinematics mode sets the target angle directly and
+does not test physical tracking.
 The club is defined separately in `assets/club.xml` and included beneath the
 wrist body. It has no joint, so it remains rigidly attached to the wrist.
 
-Only the three right-shoulder hinges and elbow are actuated by the swing
-controller; the viewer keeps its normal interactive camera controls. The
-torso, legs, left arm, and other joints are not driven. In physics mode,
-non-swing joints are held at
-their initial positions, so contact forces can make the actual club tip lag
-the target marker. Playback stops at the final pose and does not restart
-automatically. Press Backspace in the viewer to reset and replay the swing
-without closing it.
+Only `shoulder1_right` is driven by this example; the viewer keeps its normal
+interactive camera controls. The other shoulder axes, elbow, torso, legs, and
+left arm remain at their initial positions. In physics mode, contact forces
+can make the actual club tip lag the target marker. Playback stops at the
+final pose and does not restart automatically. Press Backspace in the viewer
+to reset and replay the swing without closing it.
 
 The right-shoulder hinge ranges in `assets/humanoid.xml` are −360° to 360°; the
 elbow range is 0° to 180°.
