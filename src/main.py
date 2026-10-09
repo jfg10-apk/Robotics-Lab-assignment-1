@@ -70,11 +70,7 @@ def _init_main():
     env = HumanoidEnv()
     ctrl = SwingController(env)
 
-    locked_jnt = tuple(
-        env.model.joint(joint_id).name
-        for joint_id in range(env.model.njnt)
-        if env.model.joint(joint_id).name not in ctrl.joint_names
-    )
+    locked_jnt = env.get_locked_humanoid_joints(ctrl.joint_names)
     rst_event = threading.Event()
     return args, env, ctrl, locked_jnt, rst_event
 

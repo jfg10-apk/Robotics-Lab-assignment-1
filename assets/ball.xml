@@ -1,0 +1,26 @@
+<mujoco>
+  <worldbody>
+    <!-- The current swing passes above the floor, so a tee supports the ball.
+         Tee top = 0.12465 m; ball centre = tee top + radius = 0.146 m. -->
+    <geom name="tee" type="cylinder" pos="0.115 0 0.062325"
+          size="0.008 0.062325" rgba="0.85 0.65 0.35 1"
+          contype="0" conaffinity="0"/>
+    <!-- Independent world body: gravity and contact forces move the ball. -->
+    <body name="bola" pos="0.115 0 0.146">
+      <freejoint name="bola_livre"/>
+      <geom name="bola" type="sphere" size="0.02135" mass="0.04593"
+            rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+  <!-- Explicit pairs keep the ball from colliding with the visual marker or
+       the player's body. The tee supports the ball without blocking the club.
+       Six contact dimensions include sliding, torsional and rolling friction. -->
+  <contact>
+    <pair geom1="cabeca_taco" geom2="bola" condim="6"
+          friction="0.4 0.4 0.005 0.001 0.001" solref="0.01 0.7"/>
+    <pair geom1="floor" geom2="bola" condim="6"
+          friction="0.3 0.3 0.005 0.001 0.001" solref="0.01 1"/>
+    <pair geom1="tee" geom2="bola" condim="6"
+          friction="0.3 0.3 0.005 0.001 0.001" solref="0.01 1"/>
+  </contact>
+</mujoco>
