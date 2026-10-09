@@ -82,14 +82,14 @@
       <camera name="back" pos="-3 0 1" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
       <camera name="side" pos="0 -3 1" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
       <freejoint name="root"/>
-      <geom name="torso" fromto="0 -.05 0 0 .05 0" size=".02"/>
-      <geom name="waist_upper" fromto="-.01 -.06 -.12 -.01 .06 -.12" size=".03"/>
+      <geom name="torso" fromto="0 -.05 0 0 .05 0" size=".07"/>
+      <geom name="waist_upper" fromto="-.01 -.06 -.12 -.01 .06 -.12" size=".06"/>
       <body name="head" pos="0 0 .19">
         <geom name="head" type="sphere" size=".09"/>
         <camera name="egocentric" pos=".09 0 0" xyaxes="0 -1 0 .1 0 1" fovy="80"/>
       </body>
       <body name="waist_lower" pos="-.01 0 -.26" euler="0 -30 0">
-        <geom name="waist_lower" fromto="0 -.06 0 0 .06 0" size=".04"/>
+        <geom name="waist_lower" fromto="0 -.06 0 0 .06 0" size=".06"/>
         <joint name="abdomen_z" pos="0 0 .065" axis="0 0 1" range="-55 55" class="joint_big_stiff"/>
         <joint name="abdomen_y" pos="0 0 .065" axis="0 1 0" range="-75 30" class="joint_big" ref="10"/>
         <body name="pelvis" pos="0 0 -.165">
