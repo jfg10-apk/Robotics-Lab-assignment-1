@@ -231,17 +231,21 @@
     <position name="pulso_right1" joint="pulso_right1"/>
     <position name="pulso_right2" joint="pulso_right2"/>
     <position name="pulso_right3" joint="pulso_right3"/>
-
+    <!---
     <position name="shoulder1_left" joint="shoulder1_left"/>
     <position name="shoulder2_left" joint="shoulder2_left"/>
     <position name="shoulder3_left" joint="shoulder3_left"/>
     <position name="elbow_left" joint="elbow_left"/>
-    <position name="pulso_left" joint="pulso_left"/>
+    <position name="pulso_left" joint="pulso_left"/> -->
   </actuator>
 
   <equality>
     <weld body1="pelvis"/>
 
-    <weld name="hands_together" site1="grip_hand_right" site2="grip_hand_left" solref="0.02 1"/>
+    <connect name="hands_together"
+             site1="grip_hand_right"
+             site2="grip_hand_left"
+             solref="0.02 1"/>
+
   </equality>
 </mujoco>

@@ -61,9 +61,10 @@ class HumanoidEnv:
 
         # Lista das articulações que devem estar "soltas"
         limp_joints = (
-            "shoulder1_left", "shoulder2_left", "shoulder3_left", 
-            "elbow_left", "pulso_left"
-        )
+            "shoulder1_left", "shoulder2_left", "shoulder3_left",
+            "elbow_left",
+            "pulso_left", "pulso_left1", "pulso_left2", "pulso_left3",
+    )
 
         for joint_id in range(self.model.njnt):
             body_id = int(self.model.jnt_bodyid[joint_id])
