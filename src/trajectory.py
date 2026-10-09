@@ -49,8 +49,8 @@ FOLLOW_THROUGH_ELBOW = 80
 
 # Tronco (abdomen_z e abdomen_y)
 ADDRESS_ANKLE = 0.0             # Neutro de frente
-BACKSWING_ANKLE = -20.0         # Torção para trás
-FOLLOW_THROUGH_ANKLE = 45.0     # Torção para a frente
+BACKSWING_ANKLE = -45.0         # Torção para trás
+FOLLOW_THROUGH_ANKLE = 60.0     # Torção para a frente
 
 
 def shoulder_rx(sim_t: float) -> float:

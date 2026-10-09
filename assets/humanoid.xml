@@ -83,7 +83,7 @@
   </body>
 
   <!-- Torso -->
-  <body name="torso" pos="0 0 1.282" childclass="body" euler="0 30 0">
+  <body name="torso" pos="0 0 1.24" childclass="body" euler="0 30 0">
     <camera name="back" pos="-3 0 1" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
     <camera name="side" pos="0 -3 1" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
 
@@ -105,6 +105,7 @@
 
       <!-- Pelvis -->
       <body name="pelvis" pos="0 0 -.165">
+        <inertial pos="0 0 0" mass="500" diaginertia="100 100 100"/>
         <joint name="abdomen_x" pos="0 0 .1" axis="1 0 0" range="-35 35" class="joint_big"/>
         <geom name="butt" fromto="-.02 -.07 0 -.02 .07 0" size=".09"/>
 
@@ -240,7 +241,10 @@
   </actuator>
 
   <equality>
-    <weld body1="pelvis"/>
+  
+    <weld name="lock_pelvis" body1="pelvis" solimp="0.99 0.999 0.001" solref="0.002 1"/>
+    <weld name="lock_foot_r" body1="foot_right" solimp="0.99 0.999 0.001" solref="0.002 1"/>
+    <weld name="lock_foot_l" body1="foot_left" solimp="0.99 0.999 0.001" solref="0.002 1"/>
 
     <connect name="hands_together"
              site1="grip_hand_right"
