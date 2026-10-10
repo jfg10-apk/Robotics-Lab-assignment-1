@@ -18,11 +18,12 @@ OMEGA_RX_A = 60.0       # [degrees/s] Velocidade de descida do ombro
 OMEGA_RY_B = 300.0      # [degrees/s] Velocidade de extensão do cotovelo
 OMEGA_ANKLE = 60.0       # [degrees/s] Velocidade de rotação do tronco
 
+
 # Instantes das fases, em segundos.
-T_BACKSWING = 2.0
-T_BEFORE_IMPACT = 2.5
-T_AFTER_IMPACT = 3.0
-T_FOLLOW_THROUGH = 3.5
+T_BACKSWING = 4
+T_BEFORE_IMPACT = 4.3
+T_AFTER_IMPACT = 4.45
+T_FOLLOW_THROUGH = 4.50
 SWING_TIMES = [0.0, T_BACKSWING, T_BEFORE_IMPACT, T_AFTER_IMPACT, T_FOLLOW_THROUGH]
 
 # shoulder1_right — eixo X

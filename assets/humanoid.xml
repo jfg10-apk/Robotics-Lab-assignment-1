@@ -83,7 +83,7 @@
   </body>
 
   <!-- Torso -->
-  <body name="torso" pos="0 0 1.282" childclass="body" euler="0 30 0">
+  <body name="torso" pos="0 0 1.24" childclass="body" euler="0 30 0">
     <camera name="back" pos="-3 0 1" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
     <camera name="side" pos="0 -3 1" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
 
@@ -186,7 +186,7 @@
           <!-- Left forearm -->
           <body name="lower_arm_left" pos="0 -0.01 -.3118">
             <joint name="elbow_left" axis="0 -1 0" class="elbow"/>
-            <geom name="lower_arm_left" fromto=".01 .01 -.01 .01 .01 -.2872" class="arm_lower" group="2"/>
+            <geom name="lower_arm_left" fromto=".01 .01 -.01 .01 .01 -.2872" class="arm_lower" group="2" mass="0.0001"/>
             <site name="forearm_grip_left" pos=".01 .01 -.2972" zaxis="1 1 -1"/>
 
             <!-- Left hand -->
@@ -197,7 +197,7 @@
               <joint name="pulso_left2" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left3" axis="0 0 1" range="-100 100" damping="0.08" frictionloss="0.02"/>
 
-              <geom name="hand_left" zaxis="1 -1 1" class="hand" group="2"/>
+              <geom name="hand_left" zaxis="1 -1 1" class="hand" group="2" mass="0.0001"/>
             </body>
           </body>
         </body>
