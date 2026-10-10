@@ -241,7 +241,7 @@
 
   <equality>
     <weld body1="pelvis"/>
-
+    <joint joint1="abdomen_y" polycoef="0 0 0 0 0"/>
     <connect name="hands_together"
              site1="grip_hand_right"
              site2="grip_hand_left"

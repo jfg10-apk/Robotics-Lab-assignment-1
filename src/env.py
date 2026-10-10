@@ -73,7 +73,7 @@ class HumanoidEnv:
             name = self.model.joint(joint_id).name
             if body_id == torso_id and name not in driven_joint_names and name not in limp_joints:
                 locked.append(name)
-        return tuple(locked)
+        return ()
 
     def get_target_site_position(self, action, site_name="ponta_taco"):
         """Compute a site's target position for joint targets without altering live state."""
