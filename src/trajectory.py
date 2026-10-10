@@ -56,15 +56,15 @@ FOLLOW_THROUGH_ELBOW = 90
 
 # Tronco (abdomen_z)
 ADDRESS_ANKLE_Z = 0.0             # Neutro de frente
-BACKSWING_ANKLE_Z = 40.0         # Torção para trás
-BEFORE_IMPACT_ANKLE_Z = 40
+BACKSWING_ANKLE_Z = 55.0         # Torção para trás
+BEFORE_IMPACT_ANKLE_Z = 55
 AFTER_IMPACT_ANKLE_Z = -40
 FOLLOW_THROUGH_ANKLE_Z = -55     # Torção para a frente
 
 # Tronco (abdomen_x)
 ADDRESS_ANKLE_X = 0.0             # Neutro de frente
 BACKSWING_ANKLE_X = 35      # Torção para trás
-BEFORE_IMPACT_ANKLE_X = 20
+BEFORE_IMPACT_ANKLE_X = 35
 AFTER_IMPACT_ANKLE_X = -20
 FOLLOW_THROUGH_ANKLE_X = -35   # Torção para a frente
 
