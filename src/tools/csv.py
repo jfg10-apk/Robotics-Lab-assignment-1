@@ -33,7 +33,7 @@ class CSVData:
                 np.round(speed, 2), 
                 np.round(peak_actuator_effort, 2),
                 np.round(actuator_effort, 2),
-                ])
+            ])
     
 
     def _create_csv_file(env):
@@ -70,6 +70,16 @@ class CSVData:
                     velocity[2], 
                     speed,
                     peak_actuator_effort,
-                    actuator_effort
+                    actuator_effort[0],
+                    actuator_effort[1],
+                    actuator_effort[2],
+                    actuator_effort[3],
+                    actuator_effort[4],
+                    actuator_effort[5],
+                    actuator_effort[6],
+                    actuator_effort[7],
+                    actuator_effort[8],
+                    actuator_effort[9],
+                    actuator_effort[10],
                 ])
         self.data.clear()  # Clear the data after saving to CSV
