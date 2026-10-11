@@ -117,7 +117,7 @@ def main():
     print(f"Running swing in {args.mode} mode.")
 
     if csv_data is not None:
-        CSVData._create_csv_file() # Creates the CSV file if it doesn't exist
+        CSVData._create_csv_file(env) # Creates the CSV file if it doesn't exist
 
     with mujoco.viewer.launch_passive(
         env.model,

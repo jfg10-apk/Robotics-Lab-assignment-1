@@ -79,6 +79,13 @@ class HumanoidEnv:
                 locked.append(name)
         return ()
 
+    def get_joint_names(self):
+        return [
+            self.model.joint(joint_id).name
+            for joint_id in range(self.model.njnt)
+        ]
+
+
     def get_target_site_position(self, action, site_name="ponta_taco"):
         """Compute a site's target position for joint targets without altering live state."""
         # Use scratch data so the live simulation state remains untouched.
