@@ -49,7 +49,7 @@ def _advance_frame(env, controller, mode, locked_joint_names):
 
    
 
-    env.set_target_marker(env.get_target_site_position(action)) # GREEN MARKER!!!  # Predict the commanded pose on scratch data without changing the live state.
+    #env.set_target_marker(env.get_target_site_position(action)) # GREEN MARKER!!!  # Predict the commanded pose on scratch data without changing the live state.
     
     # Physics mode:
     if mode in ("ph", "physics"):
