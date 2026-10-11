@@ -42,7 +42,6 @@ class HumanoidEnv:
         elbow_qpos_address = int(self.model.jnt_qposadr[elbow_id])
         self.elbow_initial_angle = float(self.data.qpos[elbow_qpos_address])
 
-        # These are trajectory speeds (rad/s), not actuator position targets.
         self.omega1 = pi / 2
         self.omega2 = pi / 2
 
@@ -61,9 +60,14 @@ class HumanoidEnv:
 
         # Lista das articulações que devem estar "soltas"
         limp_joints = (
-            "shoulder1_left", "shoulder2_left", "shoulder3_left",
+            "shoulder1_left", 
+            "shoulder2_left", 
+            "shoulder3_left",
             "elbow_left",
-            "pulso_left", "pulso_left1", "pulso_left2", "pulso_left3",
+            "pulso_left", 
+            "pulso_left1", 
+            "pulso_left2", 
+            "pulso_left3",
     )
 
         for joint_id in range(self.model.njnt):

@@ -9,29 +9,18 @@ import mujoco.viewer
 from controllers import SwingController
 from env import HumanoidEnv
 from tools.csv import CSVData
+from tools.parser import (
+    parse_args,
+    SIMULATION_MODES
+)
 
-SIMULATION_MODES = ("physics", "kinematics", "ph", "ki")
 
-
-def parse_args():
-    """
-        Reads arguments from CMD line
-    """
-    parser = argparse.ArgumentParser(description="Runs mujoco golf player swing project.")
-    parser.add_argument(
-        "--mode",
-        choices=SIMULATION_MODES,
-        default="physics",
-        help=(
-            "physics advances MuJoCo with actuators; kinematics sets joint "
-            "positions directly without stepping physics"
-        ),
-    )
-    return parser.parse_args()
 
 
 def _make_key_callback(reset_requested: threading.Event):
-    """Queue a reset request; model state stays on the simulation thread."""
+    """
+       Reset request
+    """
 
     def key_callback(key):
         if key == glfw.KEY_BACKSPACE:
@@ -41,27 +30,17 @@ def _make_key_callback(reset_requested: threading.Event):
 
 
 def _advance_frame(env, controller, mode, locked_joint_names):
-    """
-        Apply one trajectory frame using the selected simulation mode.
-    """
 
     sim_time = env.get_time()                   # Simulation moment
     action = controller.get_action(sim_time)    # Simulation actuation/action by the actuators
 
-   
-
     #env.set_target_marker(env.get_target_site_position(action)) # GREEN MARKER!!!  # Predict the commanded pose on scratch data without changing the live state.
-    
     # Physics mode:
-    if mode in ("ph", "physics"):
+    if mode in SIMULATION_MODES:
         for actuator_id, target in action.items():
             env.data.ctrl[actuator_id] = target
         env.step(locked_joint_names=locked_joint_names)
 
-    # Kinematics only mode:
-    elif mode in ("ki", "kinematics"):
-        env.apply_kinematic_action(action)
-        env.advance_kinematic_time()
     else:
         raise ValueError(f"Unsupported simulation mode: {mode!r}")
 
@@ -102,6 +81,13 @@ def _viewer_telemetry(env):
         right_text,
     )
 
+def _check_rst(rst_event, env):
+    if rst_event.is_set():
+        rst_event.clear()
+        env.reset()
+        return True
+    return False
+
 
 def _init_main():
     args = parse_args()
@@ -119,25 +105,16 @@ def _init_main():
                 rst_event
             )
 
-def _check_rst(rst_event, env):
-    if rst_event.is_set():
-        rst_event.clear()
-        env.reset()
-        return True
-    return False
-
 
 def main():
     """
-        Initializes classes: env, ctrl, locked_jnt, rst_event (to reset with GUI)
         Launches the MuJoCo viewer
         Runs the humanoid motion loop.
     """
 
     args, env, ctrl, csv_data, locked_jnt, rst_event = _init_main()
 
-    print(f"Running one-shot swing in {args.mode} mode.")
-    print("Press Backspace in the viewer to reset the swing.")
+    print(f"Running swing in {args.mode} mode.")
 
     if csv_data is not None:
         CSVData._create_csv_file() # Creates the CSV file if it doesn't exist
@@ -154,7 +131,12 @@ def main():
             _check_rst(rst_event, env)
             _advance_frame(env, ctrl, args.mode, locked_jnt) # Builds next frame
             if(env is not None):
-                #viewer.set_texts(_viewer_telemetry(env)) # Updates the GUI with telemetry
+                try:
+                    viewer.set_texts(_viewer_telemetry(env)) # Updates the GUI with telemetry
+                except:
+                    print(f"MuJoCo viewer has problems with Graphic drivers\n")
+                
+
                 csv_data.add_data_point(env) # Writes the data points to a CSV file
             viewer.sync() # Syncs mujoco GUI
 
