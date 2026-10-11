@@ -17,6 +17,7 @@ import numpy as np
 
 TOOLS_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = TOOLS_DIR / "results"
+GRAPHICS_DIR = TOOLS_DIR / "grafics"
 TIME_COLUMN = "Time (s)"
 MAX_EFFORT_COLUMN = "Current actuator max effort (N*m)"
 CASES = {
@@ -95,7 +96,7 @@ def plot_parameter(column, experiments, references):
         filename = column.split(" (")[0].lower().replace(" ", "_")
     else:
         filename = f"actuator_{column}"
-    output = TOOLS_DIR / f"{filename}.png"
+    output = GRAPHICS_DIR / f"{filename}.png"
     fig.savefig(output, dpi=180)
     plt.close(fig)
     print(f"Grafico guardado: {output}")
@@ -124,6 +125,7 @@ def main():
         for _, headers, _ in recordings for column in headers
         if column != TIME_COLUMN
     ))
+    GRAPHICS_DIR.mkdir(parents=True, exist_ok=True)
     for column in columns:
         plot_parameter(column, experiments, references)
 
