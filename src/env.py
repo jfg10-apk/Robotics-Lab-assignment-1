@@ -50,6 +50,32 @@ class HumanoidEnv:
             self.model.body("target_marker").mocapid[0]
         )
 
+    def set_actuator_torque_limits(
+        self, torque_limits, default_limit, scale=1.0
+    ):
+        """Apply symmetric motor-force limits; motor gear is configured as 1."""
+        unknown = set(torque_limits) - self.actuator_ids.keys()
+        if unknown:
+            raise ValueError(
+                "Torque limits reference unknown actuator(s): "
+                + ", ".join(sorted(unknown))
+            )
+        for name, actuator_id in self.actuator_ids.items():
+            limit = float(torque_limits.get(name, default_limit)) * scale
+            if limit <= 0:
+                raise ValueError(f"Torque limit for {name!r} must be positive")
+            self.model.actuator_forcelimited[actuator_id] = True
+            self.model.actuator_forcerange[actuator_id] = (-limit, limit)
+
+    def set_joint_speed_resistance(self, joint_names, damping):
+        """Set passive viscous damping for the named joints."""
+        if damping < 0:
+            raise ValueError("Joint speed resistance must be non-negative")
+        for name in joint_names:
+            joint_id = self.model.joint(name).id
+            dof_address = int(self.model.jnt_dofadr[joint_id])
+            self.model.dof_damping[dof_address] = damping
+
     def set_target_marker(self, position):
         """Place the visual target marker at a world-space point."""
         self.data.mocap_pos[self.target_marker_mocap_id] = position
@@ -59,21 +85,21 @@ class HumanoidEnv:
         torso_id = self.model.body("torso").id
         locked = []
 
-        # Lista das articulações que devem estar "soltas"
-        limp_joints = (
-            "shoulder1_left", "shoulder2_left", "shoulder3_left",
-            "elbow_left",
-            "pulso_left", "pulso_left1", "pulso_left2", "pulso_left3",
-    )
+    #     # Lista das articulações que devem estar "soltas"
+    #     limp_joints = (
+    #         "shoulder1_left", "shoulder2_left", "shoulder3_left",
+    #         "elbow_left",
+    #         "pulso_left", "pulso_left1", "pulso_left2", "pulso_left3",
+    # )
 
         for joint_id in range(self.model.njnt):
             body_id = int(self.model.jnt_bodyid[joint_id])
             while body_id != 0 and body_id != torso_id:
                 body_id = int(self.model.body_parentid[body_id])
             name = self.model.joint(joint_id).name
-            if body_id == torso_id and name not in driven_joint_names and name not in limp_joints:
+            if body_id == torso_id and name not in driven_joint_names: # and name not in limp_joints:
                 locked.append(name)
-        return ()
+        return tuple(locked)
 
     def get_target_site_position(self, action, site_name="ponta_taco"):
         """Compute a site's target position for joint targets without altering live state."""
@@ -153,9 +179,17 @@ class HumanoidEnv:
 
         mujoco.mj_forward(self.model, self.data)
 
+    def set_initial_pose(self, position_targets):
+        """Use the trajectory's address pose as the repeatable trial start."""
+        self.apply_kinematic_action(position_targets)
+        self.data.qvel[:] = 0.0
+        self.initial_qpos = self.data.qpos.copy()
+        mujoco.mj_forward(self.model, self.data)
+
     def reset(self):
         """Reset the model to its initial state."""
         mujoco.mj_resetData(self.model, self.data)
+        self.data.qpos[:] = self.initial_qpos
         mujoco.mj_forward(self.model, self.data)
 
     def advance_kinematic_time(self):

@@ -1,0 +1,43 @@
+[trajectory]
+phase_times_s = [0.0, 4.0, 4.3, 4.45, 4.5]
+aim_yaw_deg = 0.0
+
+[trajectory.joints.shoulder1_right]
+keyframes_deg = [-50.0, -90.0, 0.0, 30.0, 60.0]
+
+[trajectory.joints.shoulder2_right]
+keyframes_deg = [-25.0, -25.0, -25.0, -25.0, -25.0]
+
+[trajectory.joints.shoulder3_right]
+keyframes_deg = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+[trajectory.joints.elbow_right]
+keyframes_deg = [0.0, 120.0, 0.0, 0.0, 0.0]
+
+[trajectory.joints.abdomen_z]
+keyframes_deg = [30.0, 0.0, 0.0, 0.0, 0.0]
+
+[trajectory.joints.abdomen_x]
+keyframes_deg = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+[actuation]
+kp = 150.0
+kv = 2.0
+default_torque_limit_nm = 50.0
+
+[actuation.torque_limit_nm]
+shoulder1_right = 50.0
+shoulder2_right = 50.0
+shoulder3_right = 50.0
+elbow_right = 37.5
+abdomen_z = 75.0
+abdomen_x = 75.0
+
+[[evaluation.cases]]
+name = "baseline"
+torque_scale = 1.0
+aim_yaw_deg = 0.0
+
+[[evaluation.cases]]
+torque_scale = 0.7
+aim_yaw_deg = -10.0

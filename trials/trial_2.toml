@@ -1,0 +1,26 @@
+[trajectory]
+aim_yaw_deg = 0.0
+
+[actuation]
+kp = 150.0
+kv = 5.0
+default_torque_limit_nm = 50.0
+
+[actuation.torque_limit_nm]
+shoulder1_right = 50.0
+shoulder2_right = 50.0
+shoulder3_right = 50.0
+elbow_right = 37.5
+abdomen_z = 75.0
+abdomen_x = 75.0
+
+[actuation.torque_profiles_nm.shoulder1_right]
+type = "keyframes"
+times_s = [0.0, 0.05, 0.2, 0.25]
+torque_nm = [0.0, 8.0, 8.0, 0.0]
+
+[[evaluation.cases]]
+name = "baseline"
+torque_scale = 1.0
+aim_yaw_deg = 0.0
+

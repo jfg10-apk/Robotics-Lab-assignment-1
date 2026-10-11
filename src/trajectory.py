@@ -155,9 +155,55 @@ JOINT_TRAJECTORIES: dict[str, Callable[[float], float]] = {
 }
 
 
-def get_joint_targets(sim_t: float) -> dict[str, float]:
-    """Converte os ângulos de graus para radianos para o MuJoCo."""
-    return {
-        joint_name: float(np.deg2rad(joint_trajectory(sim_t)))
-        for joint_name, joint_trajectory in JOINT_TRAJECTORIES.items()
+def _keyframes(trajectory=None):
+    if trajectory is None:
+        times = np.asarray(SWING_TIMES, dtype=float)
+        values = {
+            joint_name: np.asarray(
+                [joint_trajectory(time) for time in SWING_TIMES], dtype=float
+            )
+            for joint_name, joint_trajectory in JOINT_TRAJECTORIES.items()
+        }
+        return times, values
+
+    times = np.asarray(trajectory.get("phase_times_s", []), dtype=float)
+    values = {
+        joint_name: np.asarray(joint["keyframes_deg"], dtype=float)
+        for joint_name, joint in trajectory.get("joints", {}).items()
     }
+    return times, values
+
+
+def get_joint_targets(
+    sim_t: float,
+    trajectory=None,
+    joint_offsets_deg=None,
+) -> dict[str, float]:
+    """Return configured joint position references in radians."""
+    times, values = _keyframes(trajectory)
+    offsets = joint_offsets_deg or {}
+    return {
+        joint_name: float(
+            np.deg2rad(
+                np.interp(sim_t, times, keyframes)
+                + offsets.get(joint_name, 0.0)
+            )
+        )
+        for joint_name, keyframes in values.items()
+    }
+
+
+def get_joint_velocity_targets(sim_t: float, trajectory=None) -> dict[str, float]:
+    """Return piecewise-constant derivatives of the configured references."""
+    times, values = _keyframes(trajectory)
+    velocities = {}
+    for joint_name, keyframes in values.items():
+        if sim_t < times[0] or sim_t >= times[-1]:
+            velocity = 0.0
+        else:
+            phase = int(np.searchsorted(times, sim_t, side="right") - 1)
+            velocity = (keyframes[phase + 1] - keyframes[phase]) / (
+                times[phase + 1] - times[phase]
+            )
+        velocities[joint_name] = float(np.deg2rad(velocity))
+    return velocities

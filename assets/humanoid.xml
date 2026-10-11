@@ -1,10 +1,7 @@
 <mujoco>
   <!-- Shared default properties for all limbs and joints. -->
   <default>
-    <!-- kv is actuator velocity feedback, not a trajectory angular-speed command. -->
-    <position kp="150"
-              kv="10"
-              inheritrange="1"/>
+    <motor gear="1" forcelimited="true" forcerange="-50 50"/>
 
     <default class="body">
       <geom type="capsule" condim="1" friction=".7" solimp=".9 .99 .003" solref=".015 1" material="body" group="1"/>
@@ -171,7 +168,7 @@
     </body>
 
     <!-- LEFT ARM -->
-    <body name="upper_arm_left" pos="0 .17 .06" euler="2 -30 0">
+    <!-- <body name="upper_arm_left" pos="0 .17 .06" euler="2 -30 0">
       <joint name="shoulder3_left" axis="0 0 1" range="-180 180" class="shoulder" ref="0"/>
       <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
 
@@ -183,15 +180,15 @@
           <joint name="shoulder1_left" axis="1 0 0" range="-180 180" class="shoulder" ref="0"/>
           <geom name="upper_arm_left" fromto="0 0 0 0 0 -.2772" class="arm_upper" group="2"/>
 
-          <!-- Left forearm -->
+         
           <body name="lower_arm_left" pos="0 -0.01 -.3118">
             <joint name="elbow_left" axis="0 -1 0" class="elbow"/>
             <geom name="lower_arm_left" fromto=".01 .01 -.01 .01 .01 -.2872" class="arm_lower" group="2" mass="0.0001"/>
             <site name="forearm_grip_left" pos=".01 .01 -.2972" zaxis="1 1 -1"/>
 
-            <!-- Left hand -->
+            
             <body name="hand_left" pos=".01 .01 -.2972">
-              <site name="grip_hand_left" pos="0 0 0" size="0.01"/>
+             
               <joint name="pulso_left" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left1" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left2" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
@@ -202,7 +199,7 @@
           </body>
         </body>
       </body>
-    </body>
+    </body> -->
 
   </body>
 </worldbody>
@@ -210,27 +207,27 @@
 
   <!-- Collision exclusions and constraints used to keep the motion stable. -->
   <contact>
-    <exclude body1="hand_right" body2="hand_left"/>
-    <exclude body1="lower_arm_right" body2="hand_left"/>
+    <!-- <exclude body1="hand_right" body2="hand_left"/>
+    <exclude body1="lower_arm_right" body2="hand_left"/> -->
     <exclude body1="waist_lower" body2="thigh_right"/>
     <exclude body1="waist_lower" body2="thigh_left"/>
   </contact>
 
   <!-- Actuator definitions used by the controller for the keyframe motion. -->
   <actuator>
-    <position name="abdomen_z" joint="abdomen_z"/>
-    <position name="abdomen_y" joint="abdomen_y"/>
-    <position name="abdomen_x" joint="abdomen_x"/>
+    <motor name="abdomen_z" joint="abdomen_z"/>
+    <motor name="abdomen_y" joint="abdomen_y"/>
+    <motor name="abdomen_x" joint="abdomen_x"/>
 
-    <position name="shoulder1_right" joint="shoulder1_right"/>
-    <position name="shoulder2_right" joint="shoulder2_right"/>
-    <position name="shoulder3_right" joint="shoulder3_right"/>
-    <position name="elbow_right" joint="elbow_right"/>
+    <motor name="shoulder1_right" joint="shoulder1_right"/>
+    <motor name="shoulder2_right" joint="shoulder2_right"/>
+    <motor name="shoulder3_right" joint="shoulder3_right"/>
+    <motor name="elbow_right" joint="elbow_right"/>
 
-    <position name="pulso_right" joint="pulso_right"/>
-    <position name="pulso_right1" joint="pulso_right1"/>
-    <position name="pulso_right2" joint="pulso_right2"/>
-    <position name="pulso_right3" joint="pulso_right3"/>
+    <motor name="pulso_right" joint="pulso_right"/>
+    <motor name="pulso_right1" joint="pulso_right1"/>
+    <motor name="pulso_right2" joint="pulso_right2"/>
+    <motor name="pulso_right3" joint="pulso_right3"/>
     <!---
     <position name="shoulder1_left" joint="shoulder1_left"/>
     <position name="shoulder2_left" joint="shoulder2_left"/>
@@ -242,10 +239,10 @@
   <equality>
     <weld body1="pelvis"/>
     <joint joint1="abdomen_y" polycoef="0 0 0 0 0"/>
-    <connect name="hands_together"
+    <!-- <connect name="hands_together"
              site1="grip_hand_right"
              site2="grip_hand_left"
-             solref="0.02 1"/>
+             solref="0.02 1"/> -->
 
   </equality>
 </mujoco>

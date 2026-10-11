@@ -23,9 +23,12 @@ This project implements a MuJoCo humanoid simulation with a modular structure to
 │   ├── env.py              # MuJoCo environment wrapper
 │   ├── controllers.py      # controller mapping motion targets to actuators
 │   ├── trajectory.py       # time-based joint target equations
+│   ├── configuration.py    # TOML trial and evaluation-case loading
 │   ├── kinematics.py       # standalone planar two-link helpers
 │   ├── Lab1.py             # backward compatible wrapper
 │   └── ...
+├── trials/
+│   └── trial_1.toml        # trajectory, PD gains, torque limits and cases
 ├── tests/
 │   └── ...                 # trajectory, model, and physics tests
 ├── README.md
@@ -115,79 +118,74 @@ To explicitly select physics mode:
 python src/main.py --mode physics
 ```
 
+Select the trial TOML and one of its named cases with `--trial` and `--case`:
+
+```bash
+python src/main.py --mode physics --trial trials/trial_1.toml --case baseline
+```
+
+Run the region-dependent angle-and-speed torque experiment with:
+
+```bash
+python src/main.py --mode physics --trial trials/trial_3.toml --case baseline
+```
+
 Close the virtual environment when you are finished:
 
 ```bash
 deactivate
 ```
 
-Physics mode uses the simulation clock, position actuators, and MuJoCo physics
-stepping. Kinematics mode writes the selected joint positions directly, updates
-the displayed pose with `mj_forward`, and advances the simulation clock without
-stepping physics.
+Physics mode advances MuJoCo with torque motors. Trial 1 uses PD torque
+tracking to follow position references; trial 2 applies a direct torque pulse
+to the right shoulder; trial 3 uses angle and speed feedback with regional parameters.
+Kinematics mode writes selected joint positions directly, updates the displayed
+pose with `mj_forward`, and advances the clock without stepping physics.
+Torque-controlled trials require physics mode.
 
-Path 1 is currently inactive. The active example trajectory in
-`src/trajectory.py` commands only `shoulder1_right` using the algebraic
-function:
+`trials/trial_1.toml` defines phase times and angle keyframes in degrees for
+the six driven joints. The trajectory code interpolates those values and
+converts them to radians. `aim_yaw_deg` is applied as an offset about the
+local `shoulder3_right` hinge axis; it is not a guaranteed world-space launch
+angle. `trials/trial_2.toml` contains only a direct torque profile for
+`shoulder1_right`; all other humanoid joints are held at their initial pose.
+
+`trials/trial_3.toml` repeats trial 1's angle keyframes. Its position
+resistance is the proportional torque gain on angle error. Its speed-control
+gain tracks a target speed derived from the slope of the angle keyframes; no
+separate speed trajectory is configured. Speed resistance is passive MuJoCo
+joint damping, and regional torque scales change the per-joint torque ceiling.
+These are distinct feedback and physical-resistance parameters.
+
+In physics mode, the XML defines torque motors with unit gear. The controller
+uses a PD tracking law to turn each position reference into a torque command:
 
 ```text
-theta1(t) = 30 degrees/second * t - 90 degrees
+torque = kp * (target_position - measured_position)
+       + kv * (target_velocity - measured_velocity)
 ```
 
-It starts at −90° at `t=0`, reaches +90° at `t=6` seconds (a 180° turn), then
-holds that endpoint. The angle is about the local X axis of the
-`shoulder1_right` hinge; it is not converted to a world-X orientation. Change
-`START_ANGLE_DEGREES`, `END_ANGLE_DEGREES`, or
-`ANGULAR_SPEED_DEGREES_PER_SECOND` in `src/trajectory.py` to adjust this
-example. `get_joint_targets(time_seconds)` returns joint-name targets in
-radians for every trajectory registered in `JOINT_TRAJECTORIES`. To add a
-second joint, define another function of time that returns degrees, then add
-the function under that joint's MuJoCo name:
+`kp` and `kv` are read from the trial TOML, and `torque_limit_nm` bounds each
+configured motor. `default_torque_limit_nm` bounds motors without an explicit
+entry. A named evaluation case can scale these limits and add a local shoulder
+offset. This is torque-limited PD trajectory tracking, not a full inverse-
+dynamics or human muscle model. The position reference is retained; the
+physics mode no longer sends it directly as the actuator command.
 
-```python
-def elbow_trajectory(time_seconds):
-    return 45.0  # Hold the elbow at 45 degrees.
+Trial 2 instead defines torque keyframes in N m. The controller interpolates
+between them and commands zero after the last profile time, so the arm receives
+one torque pulse and then swings under gravity, inertia, and passive joint
+damping rather than being driven by a repeating sinusoid.
 
-
-JOINT_TRAJECTORIES = {
-    SHOULDER_JOINT: trajectory_1,
-    "elbow_right": elbow_trajectory,
-}
-```
-
-The existing shoulder equation is evaluated independently, so registering an
-elbow trajectory does not change its shoulder targets. The controller maps
-every registered joint name to its actuator; each name must therefore have a
-matching actuator in `assets/humanoid.xml`.
-
-Trajectory and actuator responsibilities are separated: `trajectory.py`
-calculates the desired joint angle from time, while `controllers.py` maps that
-joint name to its MuJoCo actuator ID. The main loop passes the same targets to
-either physics mode or kinematics mode. Backspace resets simulation time, so
-the trajectory starts over. The green marker shows the predicted tip position
-for the commanded targets.
-
-The XML position actuators use proportional position feedback (`kp`) and
-velocity damping (`kv`); this is PD-style actuation, not a full PID controller
-with integral action. In physics mode, these settings control how closely a
-joint tracks its target. Kinematics mode sets the target angle directly and
-does not test physical tracking.
-The club is defined separately in `assets/club.xml` and included beneath the
-wrist body. It has no joint, so it remains rigidly attached to the wrist.
-
-Only `shoulder1_right` is driven by this example; the viewer keeps its normal
-interactive camera controls. The other shoulder axes, elbow, torso, legs, and
-left arm remain at their initial positions. In physics mode, contact forces
-can make the actual club tip lag the target marker. Playback stops at the
-final pose and does not restart automatically. Press Backspace in the viewer
-to reset and replay the swing without closing it.
-
-The right-shoulder hinge ranges in `assets/humanoid.xml` are −360° to 360°; the
-elbow range is 0° to 180°.
+Kinematics mode applies the position references directly and does not test
+torque tracking or physical impact. Backspace resets simulation time. The
+green marker shows the predicted club-tip position for the reference pose.
+The club is defined separately in `assets/club.xml` and remains rigidly
+attached to the wrist.
 
 The `dir_kinematics` and `inv_kinematics` functions in `src/kinematics.py`
-provide standalone planar two-link calculations. The current swing controller
-does not use them; it follows the actual shoulder hinge geometry in MuJoCo.
+provide standalone planar two-link calculations. The swing controller does
+not use them; it follows the joint geometry in MuJoCo.
 
 If a legacy script is still being used, `src/Lab1.py` remains a compatible entry point.
 

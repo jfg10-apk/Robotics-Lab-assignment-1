@@ -1,11 +1,13 @@
 import argparse
 import threading
 import time
+from pathlib import Path
 
 import glfw
 import mujoco.viewer
 
 from controllers import SwingController
+from configuration import load_trial, select_case
 from env import HumanoidEnv
 
 SIMULATION_MODES = ("physics", "kinematics", "ph", "ki")
@@ -24,6 +26,16 @@ def parse_args():
             "physics advances MuJoCo with actuators; kinematics sets joint "
             "positions directly without stepping physics"
         ),
+    )
+    parser.add_argument(
+        "--trial",
+        default=str(Path(__file__).resolve().parents[1] / "trials" / "trial_1.toml"),
+        help="TOML file containing trajectory and torque settings",
+    )
+    parser.add_argument(
+        "--case",
+        default="baseline",
+        help="Named evaluation case in the trial TOML",
     )
     return parser.parse_args()
 
@@ -44,21 +56,24 @@ def _advance_frame(env, controller, mode, locked_joint_names):
     """
 
     sim_time = env.get_time()                   # Simulation moment
-    action = controller.get_action(sim_time)    # Simulation actuation/action by the actuators
-
-   
-
-    env.set_target_marker(env.get_target_site_position(action)) # GREEN MARKER!!!  # Predict the commanded pose on scratch data without changing the live state.
+    position_targets = controller.get_position_targets(sim_time)
+    if controller.direct_torque_profiles:
+        env.set_target_marker(env.data.site("ponta_taco").xpos.copy())
+    else:
+        env.set_target_marker(env.get_target_site_position(position_targets))
     
     # Physics mode:
     if mode in ("ph", "physics"):
-        for actuator_id, target in action.items():
-            env.data.ctrl[actuator_id] = target
+        controller.apply_region(sim_time)
+        for actuator_id, torque in controller.get_torque_action(sim_time).items():
+            env.data.ctrl[actuator_id] = torque
         env.step(locked_joint_names=locked_joint_names)
 
     # Kinematics only mode:
     elif mode in ("ki", "kinematics"):
-        env.apply_kinematic_action(action)
+        if controller.requires_physics:
+            raise ValueError("This trial's torque feedback requires physics mode.")
+        env.apply_kinematic_action(position_targets)
         env.advance_kinematic_time()
     else:
         raise ValueError(f"Unsupported simulation mode: {mode!r}")
@@ -67,8 +82,11 @@ def _advance_frame(env, controller, mode, locked_joint_names):
 
 def _init_main():
     args = parse_args()
+    trial = load_trial(args.trial)
+    case = select_case(trial, args.case)
     env = HumanoidEnv()
-    ctrl = SwingController(env)
+    ctrl = SwingController(env, trial, case)
+    env.set_initial_pose(ctrl.get_position_targets(0.0))
 
     locked_jnt = env.get_locked_humanoid_joints(ctrl.joint_names)
     rst_event = threading.Event()

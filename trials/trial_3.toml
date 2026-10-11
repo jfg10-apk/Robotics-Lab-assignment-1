@@ -1,0 +1,75 @@
+[trajectory]
+phase_times_s = [0.0, 4.0, 4.3, 4.45, 4.5]
+aim_yaw_deg = 0.0
+
+[trajectory.joints.shoulder1_right]
+keyframes_deg = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+[trajectory.joints.shoulder2_right]
+keyframes_deg = [-20.0, -60.0, -20.0, -20.0, -50.0]
+
+[trajectory.joints.shoulder3_right]
+keyframes_deg = [0.0, 0.0, 0.0, 0.0, 50.0]
+
+[trajectory.joints.elbow_right]
+keyframes_deg = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+[trajectory.joints.abdomen_z]
+keyframes_deg = [0.0, 55.0, 55.0, -40.0, -55.0]
+
+[trajectory.joints.abdomen_x]
+keyframes_deg = [0.0, 35.0, 35.0, -20.0, -35.0]
+
+[actuation]
+feedback_mode = "angle_speed"
+kp = 150.0
+kv = 10.0
+default_torque_limit_nm = 50.0
+
+[actuation.torque_limit_nm]
+shoulder1_right = 50.0
+shoulder2_right = 50.0
+shoulder3_right = 50.0
+elbow_right = 37.5
+abdomen_z = 75.0
+abdomen_x = 75.0
+
+[[actuation.regions]]
+name = "backswing"
+until_s = 4.0
+position_resistance_nm_per_rad = 80.0
+speed_control_nm_s_per_rad = 0.5
+speed_resistance_nm_s_per_rad = 0.2
+torque_scale = 0.5
+
+[[actuation.regions]]
+name = "downswing"
+until_s = 4.3
+position_resistance_nm_per_rad = 140.0
+speed_control_nm_s_per_rad = 1.0
+speed_resistance_nm_s_per_rad = 0.5
+torque_scale = 0.75
+
+[[actuation.regions]]
+name = "impact"
+until_s = 4.45
+position_resistance_nm_per_rad = 200.0
+speed_control_nm_s_per_rad = 1.5
+speed_resistance_nm_s_per_rad = 1.0
+torque_scale = 1.0
+
+[[actuation.regions]]
+name = "follow_through"
+until_s = 4.5
+position_resistance_nm_per_rad = 100.0
+speed_control_nm_s_per_rad = 0.7
+speed_resistance_nm_s_per_rad = 0.4
+torque_scale = 0.6
+
+[[evaluation.cases]]
+name = "baseline"
+torque_scale = 1.0
+
+[[evaluation.cases]]
+name = "reduced_torque"
+torque_scale = 0.7
