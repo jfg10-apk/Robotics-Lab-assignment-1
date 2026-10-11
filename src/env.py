@@ -96,6 +96,16 @@ class HumanoidEnv:
         mujoco.mj_forward(self.model, self._target_data)
         return self._target_data.site(site_name).xpos.copy()
 
+    def get_ball_state(self):
+        """Read ball world position and linear velocity from MuJoCo sensors."""
+        position = self.data.sensor("ball_position").data.copy()
+        velocity = self.data.sensor("ball_linear_velocity").data.copy()
+        return {
+            "position_m": position,
+            "velocity_m_s": velocity,
+            "speed_m_s": float(mujoco.mju_norm3(velocity)),
+        }
+
     def step(self, locked_joint_names=()):
         """Step physics, restoring locked joint poses on both sides of the step."""
         locked_joints = []
