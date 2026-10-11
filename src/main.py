@@ -64,6 +64,43 @@ def _advance_frame(env, controller, mode, locked_joint_names):
         raise ValueError(f"Unsupported simulation mode: {mode!r}")
 
 
+def _viewer_telemetry(env, controller):
+    ball = env.get_ball_state()
+    ball_geom = env.model.geom("bola").id
+    club_geom = env.model.geom("cabeca_taco").id
+    contact_force = 0.0
+    for contact_id in range(env.data.ncon):
+        contact = env.data.contact[contact_id]
+        if {contact.geom1, contact.geom2} != {ball_geom, club_geom}:
+            continue
+        force = np.zeros(6)
+        mujoco.mj_contactForce(env.model, env.data, contact_id, force)
+        contact_force = max(contact_force, float(np.linalg.norm(force[:3])))
+
+    peak_actuator_effort = float(np.max(np.abs(env.data.actuator_force)))
+    position = ball["position_m"]
+    velocity = ball["velocity_m_s"]
+    left_text = (
+        f"Case: {controller.case['name']}\n"
+        f"Time: {env.get_time():.3f} s\n"
+        f"Ball position (m): {position[0]:.3f}, {position[1]:.3f}, {position[2]:.3f}\n"
+        f"Ball velocity (m/s): {velocity[0]:.3f}, {velocity[1]:.3f}, {velocity[2]:.3f}\n"
+        f"Ball speed: {ball['speed_m_s']:.3f} m/s\n"
+        f"Club-ball contact force: {contact_force:.1f} N\n"
+        f"Current max joint actuator effort: {peak_actuator_effort:.1f} N m"
+    )
+    right_text = (
+        # f"Ball speed: {ball['speed_m_s']:.3f} m/s\n"
+        # f"Club-ball contact force: {contact_force:.1f} N\n"
+        f"\n"
+    )
+    return (
+        mujoco.mjtFontScale.mjFONTSCALE_150,
+        mujoco.mjtGridPos.mjGRID_TOPLEFT,
+        left_text,
+        right_text,
+    )
+
 
 def _init_main():
     args = parse_args()
@@ -106,6 +143,7 @@ def main():
             # Resetting the simulation clock also resets the stateless controller.
             _check_rst(rst_event, env)
             _advance_frame(env, ctrl, args.mode, locked_jnt) # Builds next frame
+            viewer.set_texts(_viewer_telemetry(env, ctrl)) # Updates the GUI with telemetry
             viewer.sync() # Syncs mujoco GUI
 
             time_until_next_step = env.timestep - (time.perf_counter() - step_start)
