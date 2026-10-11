@@ -3,12 +3,13 @@ import numpy as np
 from pathlib import Path
 
 
-csv_file_path = "data_points.csv"
+csv_file_path = Path(__file__).resolve().parent / "data_points.csv"
 
 
 class CSVData:
-    def __init__(self):
+    def __init__(self, file_path=None):
         self.data = []
+        self.file_path = Path(csv_file_path if file_path is None else file_path)
 
 
     def add_data_point(self, env):
@@ -28,19 +29,22 @@ class CSVData:
             actuator_effort is not None):
             self.data.append([
                 np.round(time,3), 
-                np.round(position,2), 
-                np.round(velocity, 2), 
+                *np.round(position,2),
+                *np.round(velocity, 2),
                 np.round(speed, 2), 
                 np.round(peak_actuator_effort, 2),
-                np.round(actuator_effort, 2),
+                *np.round(actuator_effort, 2),
                 ])
     
 
-    def _create_csv_file(env):
-        if Path(csv_file_path).exists():
-            print(f"CSV file '{csv_file_path}' already exists. Data will override to the existing file.")
+    @staticmethod
+    def _create_csv_file(env, file_path=None):
+        path = Path(csv_file_path if file_path is None else file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            print(f"CSV file '{path}' already exists. Data will override to the existing file.")
             
-        with open(csv_file_path, mode='w', newline='') as file:
+        with path.open(mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow([
                 "Time (s)", 
@@ -53,23 +57,10 @@ class CSVData:
                 "Ball Speed (m/s)",
                 "Current actuator max effort (N*m)",
                 
-            ] + env.get_joint_names())
+            ] + [env.model.joint(env.actuator_joint_ids[i]).name
+                 for i in range(env.model.nu)])
             
     def save_to_csv(self):
-        with open(csv_file_path, mode='a', newline='') as file:
-            writer = csv.writer(file, delimiter="\t")
-            for data_point in self.data:
-                time, position, velocity, speed, peak_actuator_effort, actuator_effort = data_point
-                writer.writerow([
-                    time, 
-                    position[0], 
-                    position[1], 
-                    position[2], 
-                    velocity[0], 
-                    velocity[1], 
-                    velocity[2], 
-                    speed,
-                    peak_actuator_effort,
-                    actuator_effort
-                ])
+        with self.file_path.open(mode='a', newline='', encoding='utf-8') as file:
+            csv.writer(file).writerows(self.data)
         self.data.clear()  # Clear the data after saving to CSV

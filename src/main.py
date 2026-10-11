@@ -131,12 +131,6 @@ def main():
             _check_rst(rst_event, env)
             _advance_frame(env, ctrl, args.mode, locked_jnt) # Builds next frame
             if(env is not None):
-                try:
-                    viewer.set_texts(_viewer_telemetry(env)) # Updates the GUI with telemetry
-                except:
-                    print(f"MuJoCo viewer has problems with Graphic drivers\n")
-                
-
                 csv_data.add_data_point(env) # Writes the data points to a CSV file
             viewer.sync() # Syncs mujoco GUI
 
