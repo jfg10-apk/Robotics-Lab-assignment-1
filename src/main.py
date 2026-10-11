@@ -82,18 +82,17 @@ def _viewer_telemetry(env, controller):
     position = ball["position_m"]
     velocity = ball["velocity_m_s"]
     left_text = (
-        f"Case: {controller.case['name']}\n"
         f"Time: {env.get_time():.3f} s\n"
         f"Ball position (m): {position[0]:.3f}, {position[1]:.3f}, {position[2]:.3f}\n"
-        f"Ball velocity (m/s): {velocity[0]:.3f}, {velocity[1]:.3f}, {velocity[2]:.3f}\n"
+        #f"Ball velocity (m/s): {velocity[0]:.3f}, {velocity[1]:.3f}, {velocity[2]:.3f}\n"
         f"Ball speed: {ball['speed_m_s']:.3f} m/s\n"
         f"Club-ball contact force: {contact_force:.1f} N\n"
-        f"Current max joint actuator effort: {peak_actuator_effort:.1f} N m"
+        f"Current max joint actuator effort: {peak_actuator_effort:.1f} N m\0"
     )
     right_text = (
         # f"Ball speed: {ball['speed_m_s']:.3f} m/s\n"
         # f"Club-ball contact force: {contact_force:.1f} N\n"
-        f"\n"
+        f"\0"
     )
     return (
         mujoco.mjtFontScale.mjFONTSCALE_150,
@@ -144,7 +143,8 @@ def main():
             # Resetting the simulation clock also resets the stateless controller.
             _check_rst(rst_event, env)
             _advance_frame(env, ctrl, args.mode, locked_jnt) # Builds next frame
-            viewer.set_texts(_viewer_telemetry(env, ctrl)) # Updates the GUI with telemetry
+            #if(env is not None and viewer is not None):
+            #    viewer.set_texts(_viewer_telemetry(env, ctrl)) # Updates the GUI with telemetry
             viewer.sync() # Syncs mujoco GUI
 
             time_until_next_step = env.timestep - (time.perf_counter() - step_start)
