@@ -1,51 +1,25 @@
 # Robotics Laboratory 1
 
-This project implements a MuJoCo humanoid simulation with a modular structure to keep the environment, controller logic, and motion trajectory separated for easier maintenance and extension.
+MuJoCo golf swing simulation with CSV recording and perturbation experiments.
 
 ## Authors
+
 - Tiago Duamnu
 - Francisco Gonçalves
 - Gonçalo
 
-## Project structure
+## Installation
 
-```
-.
-├── assets/
-│   ├── main.xml            # top-level MuJoCo file that composes the scene
-│   ├── scene.xml           # visual, option, stats and shared assets
-│   ├── humanoid.xml        # robot body, joints, contacts and actuators
-│   ├── club.xml            # rigid club geometry and orientation
-│   ├── human.xml           # legacy model snapshot kept for reference
-│   └── ...
-├── src/
-│   ├── main.py             # entry point for the simulation loop
-│   ├── env.py              # MuJoCo environment wrapper
-│   ├── controllers.py      # controller mapping motion targets to actuators
-│   ├── trajectory.py       # time-based joint target equations
-│   ├── kinematics.py       # standalone planar two-link helpers
-│   ├── Lab1.py             # backward compatible wrapper
-│   └── ...
-├── tests/
-│   └── ...                 # trajectory, model, and physics tests
-├── README.md
-└── requirements.txt
-```
-
-## Why this structure is easier to develop
-
-- XML resources are separated by responsibility: the `scene` and the `humanoid` model are now in dedicated files.
-- The simulation environment is isolated in `env.py` so it can be reused or extended without mixing physics logic with motion planning.
-- The environment reads actuator IDs, right-arm link lengths, hinge geometry, and the simulation timestep from the loaded MuJoCo model.
-- The controller maps fixed path poses in `src/trajectory.py` to actuator targets.
-- `main.py` acts as the entry point and keeps the execution flow readable.
-
-## Setup and run
-
-Run the following commands from the project root (the directory containing
-`requirements.txt`). Use Python 3.11 or newer.
+Use Python 3.11 or newer. Run all commands from the project root, where
+`requirements.txt` is located.
 
 ### 1. Create a virtual environment
+
+Windows:
+
+```powershell
+py -m venv .venv
+```
 
 Linux/macOS:
 
@@ -53,22 +27,7 @@ Linux/macOS:
 python3 -m venv .venv
 ```
 
-Windows PowerShell or Command Prompt:
-
-```powershell
-py -m venv .venv
-```
-
-The `.venv` directory is ignored by Git and contains this project's isolated
-Python environment.
-
 ### 2. Activate the environment
-
-Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
 
 Windows PowerShell:
 
@@ -82,117 +41,116 @@ Windows Command Prompt:
 .venv\Scripts\activate.bat
 ```
 
-When activation succeeds, the environment name (usually `.venv`) appears in
-your terminal prompt. Activate it again whenever you open a new terminal for
-this project.
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
 
 ### 3. Install the dependencies
 
-With `.venv` activated, install the packages listed in `requirements.txt`:
-
 ```bash
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the simulation
+Activate the environment again whenever you open a new terminal.
+On macOS, use `mjpython` instead of `python` for the simulation and
+perturbation commands that open the MuJoCo viewer.
 
-Still from the project root, start the default physics simulation:
+## Run the normal simulation
 
 ```bash
 python src/main.py
 ```
 
-To run without physics stepping, with the selected joint positions set directly:
+The MuJoCo window opens and shows the swing. Press **Backspace** to reset and
+replay it. Close the window to save the recording to:
 
-```bash
-python src/main.py --mode kinematics
+```text
+src/tools/data_points.csv
 ```
 
-To explicitly select physics mode:
+A new execution replaces this CSV. Replays within the same execution are
+recorded in the same file.
+
+## Run the perturbation experiments
+
+Specify the torque in N·m:
 
 ```bash
-python src/main.py --mode physics
+python src/tools/perturbations.py --torque 5
 ```
 
-Close the virtual environment when you are finished:
+The script shows four experiments in sequence: reference, shoulder, elbow,
+and wrist. Each runs for 6 seconds of simulation time. Closing the window
+early saves the collected samples and stops the remaining experiments.
+
+For a negative torque:
+
+```bash
+python src/tools/perturbations.py --torque -5
+```
+
+To run only one experiment:
+
+```bash
+python src/tools/perturbations.py --case pulso --torque 5
+```
+
+`--case` accepts `referencia`, `ombro`, `cotovelo`, or `pulso`.
+Without `--torque`, the script uses `TORQUE_NM` at the top of
+`src/tools/perturbations.py`.
+
+The CSV files are saved in a folder named after the torque, for example:
+
+```text
+src/tools/results/torque_5Nm/
+├── referencia.csv
+├── ombro.csv
+├── cotovelo.csv
+└── pulso.csv
+```
+
+Negative values use folders such as `torque_-5Nm/`. Repeating the same torque
+replaces the CSV files for the experiments executed. With `--case`, only that
+experiment's CSV is replaced.
+
+To record four torque values for comparison:
+
+```bash
+python src/tools/perturbations.py --torque -5
+python src/tools/perturbations.py --torque -1
+python src/tools/perturbations.py --torque 1
+python src/tools/perturbations.py --torque 5
+```
+
+## Generate the graphs
+
+After recording the perturbation experiments, run:
+
+```bash
+python src/tools/grafics.py
+```
+
+The script reads the CSV files under `src/tools/results/`. Include a
+`referencia.csv` recording so it can compare the experiments with the normal
+swing. The PNG images are saved in:
+
+```text
+src/tools/grafics/
+```
+
+For example, `ball_speed.png` and `actuator_elbow_right.png` are generated in
+this folder. Run the command again after creating new results to update the
+images. Existing images with the same names are replaced.
+
+The output folders are created automatically. The `results/` folders and PNG
+images are ignored by Git and are generated locally using the commands above.
+
+## Finish
+
+To deactivate the virtual environment:
 
 ```bash
 deactivate
 ```
-
-Physics mode uses the simulation clock, position actuators, and MuJoCo physics
-stepping. Kinematics mode writes the selected joint positions directly, updates
-the displayed pose with `mj_forward`, and advances the simulation clock without
-stepping physics.
-
-Path 1 is currently inactive. The active example trajectory in
-`src/trajectory.py` commands only `shoulder1_right` using the algebraic
-function:
-
-```text
-theta1(t) = 30 degrees/second * t - 90 degrees
-```
-
-It starts at −90° at `t=0`, reaches +90° at `t=6` seconds (a 180° turn), then
-holds that endpoint. The angle is about the local X axis of the
-`shoulder1_right` hinge; it is not converted to a world-X orientation. Change
-`START_ANGLE_DEGREES`, `END_ANGLE_DEGREES`, or
-`ANGULAR_SPEED_DEGREES_PER_SECOND` in `src/trajectory.py` to adjust this
-example. `get_joint_targets(time_seconds)` returns joint-name targets in
-radians for every trajectory registered in `JOINT_TRAJECTORIES`. To add a
-second joint, define another function of time that returns degrees, then add
-the function under that joint's MuJoCo name:
-
-```python
-def elbow_trajectory(time_seconds):
-    return 45.0  # Hold the elbow at 45 degrees.
-
-
-JOINT_TRAJECTORIES = {
-    SHOULDER_JOINT: trajectory_1,
-    "elbow_right": elbow_trajectory,
-}
-```
-
-The existing shoulder equation is evaluated independently, so registering an
-elbow trajectory does not change its shoulder targets. The controller maps
-every registered joint name to its actuator; each name must therefore have a
-matching actuator in `assets/humanoid.xml`.
-
-Trajectory and actuator responsibilities are separated: `trajectory.py`
-calculates the desired joint angle from time, while `controllers.py` maps that
-joint name to its MuJoCo actuator ID. The main loop passes the same targets to
-either physics mode or kinematics mode. Backspace resets simulation time, so
-the trajectory starts over. The green marker shows the predicted tip position
-for the commanded targets.
-
-The XML position actuators use proportional position feedback (`kp`) and
-velocity damping (`kv`); this is PD-style actuation, not a full PID controller
-with integral action. In physics mode, these settings control how closely a
-joint tracks its target. Kinematics mode sets the target angle directly and
-does not test physical tracking.
-The club is defined separately in `assets/club.xml` and included beneath the
-wrist body. It has no joint, so it remains rigidly attached to the wrist.
-
-Only `shoulder1_right` is driven by this example; the viewer keeps its normal
-interactive camera controls. The other shoulder axes, elbow, torso, legs, and
-left arm remain at their initial positions. In physics mode, contact forces
-can make the actual club tip lag the target marker. Playback stops at the
-final pose and does not restart automatically. Press Backspace in the viewer
-to reset and replay the swing without closing it.
-
-The right-shoulder hinge ranges in `assets/humanoid.xml` are −360° to 360°; the
-elbow range is 0° to 180°.
-
-The `dir_kinematics` and `inv_kinematics` functions in `src/kinematics.py`
-provide standalone planar two-link calculations. The current swing controller
-does not use them; it follows the actual shoulder hinge geometry in MuJoCo.
-
-If a legacy script is still being used, `src/Lab1.py` remains a compatible entry point.
-
-## Notes
-
-The MuJoCo model is composed through `assets/main.xml` using `<include>` blocks.
-This keeps the scene, humanoid, and club definitions separate while loading a
-single model at runtime.

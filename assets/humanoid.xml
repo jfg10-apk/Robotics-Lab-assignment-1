@@ -157,7 +157,6 @@
             <!-- Right hand -->
             <body name="hand_right" pos=".01 -.01 -.2972">
               <site name="grip_hand_right" pos="0 0 0" size="0.01"/>
-              <joint name="pulso_right" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_right1" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_right2" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_right3" axis="0 0 1" range="-100 100" damping="0.08" frictionloss="0.02"/>
@@ -192,7 +191,6 @@
             <!-- Left hand -->
             <body name="hand_left" pos=".01 .01 -.2972">
               <site name="grip_hand_left" pos="0 0 0" size="0.01"/>
-              <joint name="pulso_left" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left1" axis="1 0 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left2" axis="0 1 0" range="-100 100" damping="0.08" frictionloss="0.02"/>
               <joint name="pulso_left3" axis="0 0 1" range="-100 100" damping="0.08" frictionloss="0.02"/>
@@ -227,8 +225,7 @@
     <position name="shoulder3_right" joint="shoulder3_right"/>
     <position name="elbow_right" joint="elbow_right"/>
 
-    <position name="pulso_right" joint="pulso_right"/>
-    <position name="pulso_right1" joint="pulso_right1"/>
+    <position name="pulso_right" joint="pulso_right1"/>
     <position name="pulso_right2" joint="pulso_right2"/>
     <position name="pulso_right3" joint="pulso_right3"/>
     <!---
